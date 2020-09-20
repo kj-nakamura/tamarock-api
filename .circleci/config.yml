@@ -1,0 +1,26 @@
+version: 2.1
+
+orbs:
+  aws-ecr: circleci/aws-ecr@6.5.0
+  aws-ecs: circleci/aws-ecs@0.0.10
+  slack: circleci/slack@3.4.2
+workflows:
+  api-build-and-deploy:
+    jobs:
+      - aws-ecr/build-and-push-image:
+          account-url: ECR_DOMAIN
+          dockerfile: ./docker/app/Dockerfile
+          repo: "tamarock-api"
+          region: AWS_DEFAULT_REGION
+          tag: "${CIRCLE_SHA1}"
+          filters:
+            branches:
+              only: master
+      - aws-ecs/deploy-service-update:
+          requires:
+            - aws-ecr/build-and-push-image
+          aws-region: AWS_DEFAULT_REGION
+          family: "tamarock-service"
+          cluster-name: "tamarock-ecs-cluster"
+          container-image-name-updates: "container=api,tag=${CIRCLE_SHA1}"
+          # container-env-var-updates: "container=api,name=API_KEY,value=${API_KEY}"
