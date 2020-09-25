@@ -264,6 +264,8 @@ func listenCtrl(network string, address string, c syscall.RawConn) error {
 func StartWebServer() error {
 	r := mux.NewRouter()
 	// web
+	// health check
+	r.HandleFunc("/api/health-check", healthCheckHandler).Methods("GET")
 	// artist
 	r.HandleFunc("/api/search", searchArtistHandler).Methods("GET")
 	r.HandleFunc("/api/artist/infos", getArtistInfosHandler).Methods("GET")
