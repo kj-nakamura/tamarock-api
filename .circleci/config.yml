@@ -22,5 +22,5 @@ workflows:
           aws-region: AWS_DEFAULT_REGION
           family: "tamarock-service"
           cluster-name: "tamarock-ecs-cluster"
-          container-image-name-updates: "container=api,tag=${CIRCLE_SHA1}"
+          container-image-name-updates: "container=tamarock-api,tag=${CIRCLE_SHA1}"
           # container-env-var-updates: "container=api,name=API_KEY,value=${API_KEY}"
