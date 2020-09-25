@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"getartist/app/models"
+	"api/app/models"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dgrijalva/jwt-go"

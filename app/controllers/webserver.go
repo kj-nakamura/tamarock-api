@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"syscall"
 
-	"getartist/app/auth"
-	"getartist/app/models"
-	"getartist/config"
+	"api/app/auth"
+	"api/app/models"
+	"api/config"
 
 	"github.com/gorilla/mux"
 	"github.com/zmb3/spotify"

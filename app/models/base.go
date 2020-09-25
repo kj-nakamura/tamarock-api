@@ -4,7 +4,7 @@ import (
 	"log"
 
 	// orm
-	"getartist/config"
+	"api/config"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"

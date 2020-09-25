@@ -1,7 +1,7 @@
 package main
 
 import (
-	"getartist/app/controllers"
+	"api/app/controllers"
 )
 
 func main() {

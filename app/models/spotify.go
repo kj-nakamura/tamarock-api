@@ -1,9 +1,9 @@
 package models
 
 import (
+	"api/config"
 	"context"
 	"fmt"
-	"getartist/config"
 	"log"
 	"net/http"
 
