@@ -293,6 +293,7 @@ func StartWebServer() error {
 
 	// auth
 	r.HandleFunc("/api/admin/login", auth.Login).Methods("POST")
+	r.HandleFunc("/api/admin/signup", auth.Signup).Methods("POST")
 
 	r.HandleFunc("/health-check/", healthCheckHandler)
 	http.Handle("/", r)
