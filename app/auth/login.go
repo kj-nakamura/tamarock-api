@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"api/app/models"
 
@@ -31,11 +32,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	var user models.AdminUser
 	var error Error
 
-	// r.body に何が帰ってくるか確認
-	fmt.Println(r.Body)
-
-	// https://golang.org/pkg/encoding/json/#NewDecoder
-	// json.NewDecoder(r.Body).Decode(&user)
 	dec := json.NewDecoder(r.Body)
 	for err := dec.Decode(&user); err != nil && err != io.EOF; {
 		log.Println("ERROR: " + err.Error())
@@ -53,15 +49,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// user に何が格納されているのか
-	fmt.Println(user)
-
-	// dump も出せる
-	fmt.Println("---------------------")
-	// spew.Dump(user)
-
-	// パスワードのハッシュを生成
-	// https://godoc.org/golang.org/x/crypto/bcrypt#GenerateFromPassword
 	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 
 	if err != nil {
@@ -183,4 +170,47 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	jwt.Token = token
 
 	responseByJSON(w, jwt)
+}
+
+func TokenVerifyMiddleWare(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		var errorObject Error
+
+		// HTTP リクエストヘッダーを読み取る
+		authHeader := r.Header.Get("Authorization")
+		// Restlet Client から以下のような文字列を渡す
+		// bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3Q5OUBleGFtcGxlLmNvLmpwIiwiaXNzIjoiY291cnNlIn0.7lJKe5SlUbdo2uKO_iLzzeGoxghG7SXsC3w-4qBRLvs
+		bearerToken := strings.Split(authHeader, " ")
+
+		if len(bearerToken) == 2 {
+			authToken := bearerToken[1]
+
+			token, error := jwt.Parse(authToken, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("エラーが発生しました。")
+				}
+				return []byte("secret"), nil
+			})
+
+			if error != nil {
+				errorObject.Message = "認証エラー"
+				http.Error(w, errorObject.Message, http.StatusUnauthorized)
+				return
+			}
+
+			if token.Valid {
+				// レスポンスを返す
+				next.ServeHTTP(w, r)
+			} else {
+				errorObject.Message = error.Error()
+				http.Error(w, errorObject.Message, http.StatusUnauthorized)
+				return
+			}
+		} else {
+			errorObject.Message = "Token が無効です。"
+			http.Error(w, errorObject.Message, http.StatusUnauthorized)
+			return
+		}
+	})
 }

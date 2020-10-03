@@ -278,18 +278,18 @@ func StartWebServer() error {
 
 	// admin
 	// artist
-	r.HandleFunc("/api/admin/artists", getAdminArtistsHandler).Methods("GET")
-	r.HandleFunc("/api/admin/artists/{id}", getAdminArtistHandler).Methods("GET")
-	r.HandleFunc("/api/admin/artists", createArtistHandler).Methods("POST")
-	r.HandleFunc("/api/admin/artists/{id}", updateArtistHandler).Methods("PUT")
-	r.HandleFunc("/api/admin/artists/{id}", deleteArtistHandler).Methods("DELETE")
+	r.HandleFunc("/api/admin/artists", auth.TokenVerifyMiddleWare(getAdminArtistsHandler)).Methods("GET")
+	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(getAdminArtistHandler)).Methods("GET")
+	r.HandleFunc("/api/admin/artists", auth.TokenVerifyMiddleWare(createArtistHandler)).Methods("POST")
+	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(updateArtistHandler)).Methods("PUT")
+	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(deleteArtistHandler)).Methods("DELETE")
 
 	// // article
-	r.HandleFunc("/api/admin/articles", getAdminArticlesHandler).Methods("GET")
-	r.HandleFunc("/api/admin/articles/{id}", getAdminArticleHandler).Methods("GET")
-	r.HandleFunc("/api/admin/articles", createAdminArticleHandler).Methods("POST")
-	r.HandleFunc("/api/admin/articles/{id}", updateAdminArticleHandler).Methods("PUT")
-	r.HandleFunc("/api/admin/articles/{id}", deleteAdminArticleHandler).Methods("DELETE")
+	r.HandleFunc("/api/admin/articles", auth.TokenVerifyMiddleWare(getAdminArticlesHandler)).Methods("GET")
+	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(getAdminArticleHandler)).Methods("GET")
+	r.HandleFunc("/api/admin/articles", auth.TokenVerifyMiddleWare(createAdminArticleHandler)).Methods("POST")
+	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(updateAdminArticleHandler)).Methods("PUT")
+	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(deleteAdminArticleHandler)).Methods("DELETE")
 
 	// auth
 	r.HandleFunc("/api/admin/login", auth.Login).Methods("POST")
