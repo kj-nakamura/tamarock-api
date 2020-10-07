@@ -10,7 +10,6 @@ import (
 
 	"api/app/models"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -98,7 +97,7 @@ func CreateToken(user models.AdminUser) (string, error) {
 	})
 
 	//Dumpを吐く
-	spew.Dump(token)
+	// spew.Dump(token)
 
 	tokenString, err := token.SignedString([]byte(secret))
 
@@ -129,28 +128,26 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if user.Password == "" {
 		error.Message = "パスワードは、必須です。"
 		http.Error(w, error.Message, http.StatusBadRequest)
+		return
 	}
 
 	// リクエストのパスワード
 	password := user.Password
-	hashdPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
-
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	// 認証キー(Email)のユーザー情報をDBから取得
 	if result := models.DbConnection.Where("email = ?", user.Email).Find(&user); result.Error != nil {
 		if result.RecordNotFound() {
 			error.Message = "ユーザが存在しません。"
 			http.Error(w, error.Message, http.StatusBadRequest)
+			return
 		} else {
 			log.Fatal(result.Error)
+			return
 		}
 	}
-
+	fmt.Println(user.Password)
 	// リクエストのパスワードとDBから取得したパスワードを比較
-	err = bcrypt.CompareHashAndPassword(hashdPassword, []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 
 	if err != nil {
 		error.Message = "無効なパスワードです。"
@@ -162,6 +159,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
