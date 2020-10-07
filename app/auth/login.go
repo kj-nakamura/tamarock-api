@@ -167,6 +167,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	jwt.Token = token
 
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET , DELETE , PUT , OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	responseByJSON(w, jwt)
 }
 
