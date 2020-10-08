@@ -279,17 +279,17 @@ func StartWebServer() error {
 	// admin
 	// artist
 	r.HandleFunc("/api/admin/artists", auth.TokenVerifyMiddleWare(getAdminArtistsHandler)).Methods("GET", "OPTIONS")
-	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(getAdminArtistHandler)).Methods("GET")
-	r.HandleFunc("/api/admin/artists", auth.TokenVerifyMiddleWare(createArtistHandler)).Methods("POST")
-	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(updateArtistHandler)).Methods("PUT")
-	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(deleteArtistHandler)).Methods("DELETE")
+	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(getAdminArtistHandler)).Methods("GET", "OPTIONS")
+	r.HandleFunc("/api/admin/artists", auth.TokenVerifyMiddleWare(createArtistHandler)).Methods("POST", "OPTIONS")
+	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(updateArtistHandler)).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(deleteArtistHandler)).Methods("DELETE", "OPTIONS")
 
 	// // article
 	r.HandleFunc("/api/admin/articles", auth.TokenVerifyMiddleWare(getAdminArticlesHandler)).Methods("GET", "OPTIONS")
-	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(getAdminArticleHandler)).Methods("GET")
-	r.HandleFunc("/api/admin/articles", auth.TokenVerifyMiddleWare(createAdminArticleHandler)).Methods("POST")
-	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(updateAdminArticleHandler)).Methods("PUT")
-	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(deleteAdminArticleHandler)).Methods("DELETE")
+	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(getAdminArticleHandler)).Methods("GET", "OPTIONS")
+	r.HandleFunc("/api/admin/articles", auth.TokenVerifyMiddleWare(createAdminArticleHandler)).Methods("POST", "OPTIONS")
+	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(updateAdminArticleHandler)).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(deleteAdminArticleHandler)).Methods("DELETE", "OPTIONS")
 
 	// auth
 	r.HandleFunc("/api/admin/login", auth.Login).Methods("POST", "OPTIONS")
