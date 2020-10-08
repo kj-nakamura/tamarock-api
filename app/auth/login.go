@@ -114,9 +114,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET , DELETE , PUT , OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	if r.Method == "OPTIONS" {
-		fmt.Println("optionを返すよ")
 		return
 	}
+
 	var user models.AdminUser
 	var error Error
 	var jwt JWT
@@ -179,7 +179,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func TokenVerifyMiddleWare(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET , DELETE , PUT , OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Expose-Headers", "X-Total-Count")
+		if r.Method == "OPTIONS" {
+			return
+		}
 		var errorObject Error
 
 		// HTTP リクエストヘッダーを読み取る
