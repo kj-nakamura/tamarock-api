@@ -114,9 +114,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET , DELETE , PUT , OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	if r.Method == "OPTIONS" {
+		fmt.Println("OPTIONSに来たよ")
 		return
 	}
-
+	fmt.Println("OPTIONSを超えたよ")
 	var user models.AdminUser
 	var error Error
 	var jwt JWT
