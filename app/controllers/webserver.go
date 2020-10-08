@@ -292,7 +292,7 @@ func StartWebServer() error {
 	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(deleteAdminArticleHandler)).Methods("DELETE")
 
 	// auth
-	r.HandleFunc("/api/admin/login", auth.Login).Methods("POST")
+	r.HandleFunc("/api/admin/login", auth.Login).Methods("POST", "OPTIONS")
 	// r.HandleFunc("/api/admin/signup", auth.Signup).Methods("POST")
 
 	r.HandleFunc("/health-check/", healthCheckHandler)

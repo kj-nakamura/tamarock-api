@@ -109,6 +109,14 @@ func CreateToken(user models.AdminUser) (string, error) {
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET , DELETE , PUT , OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	if r.Method == "OPTIONS" {
+		fmt.Println("optionを返すよ")
+		return
+	}
 	var user models.AdminUser
 	var error Error
 	var jwt JWT
@@ -163,13 +171,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
 
 	jwt.Token = token
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, GET , DELETE , PUT , OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	responseByJSON(w, jwt)
 }
 
