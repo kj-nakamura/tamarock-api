@@ -24,7 +24,7 @@ func init() {
 		log.Fatalln(err)
 	}
 
-	DbConnection.AutoMigrate(&AdminUser{})
-	DbConnection.AutoMigrate(&ArtistInfo{})
-	DbConnection.AutoMigrate(&Article{})
+	migrateAdminUser()
+	migrateArtistInfo()
+	migrateArticle()
 }

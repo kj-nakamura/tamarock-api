@@ -15,11 +15,16 @@ import (
 type Article struct {
 	ID        uint       `gorm:"primarykey" json:"id"`
 	Title     string     `json:"title"`
-	Text      string     `json:"text"`
+	Text      string     `gorm:"text" json:"text"`
 	Category  int        `json:"category"`
 	CreatedAt time.Time  `json:"createdat"`
 	UpdatedAt time.Time  `json:"updatedat"`
 	DeletedAt *time.Time `json:"deletedat"`
+}
+
+func migrateArticle() {
+	DbConnection.AutoMigrate(&Article{})
+	DbConnection.Model(&Article{}).ModifyColumn("text", "text")
 }
 
 func CreateArticle(r *http.Request) Article {
@@ -65,7 +70,7 @@ func DeleteArticle(id int) {
 	DbConnection.Delete(&article, id)
 }
 
-// GetArticle is 引数のIDに合致したアーティストを返す
+// GetArticle is 引数のIDに合致した記事を返す
 func GetArticle(id int) Article {
 	var article Article
 
@@ -74,7 +79,7 @@ func GetArticle(id int) Article {
 	return article
 }
 
-// GetArticles is アーティスト情報を複数返す
+// GetArticles is 記事を複数返す
 func GetArticles() []Article {
 	var articles []Article
 	DbConnection.Find(&articles)

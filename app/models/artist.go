@@ -23,6 +23,10 @@ type ArtistInfo struct {
 	DeletedAt *time.Time `json:"deleted_at"`
 }
 
+func migrateArtistInfo() {
+	DbConnection.AutoMigrate(&ArtistInfo{})
+}
+
 func CreateArtistInfo(r *http.Request) ArtistInfo {
 	var artistInfo ArtistInfo
 	dec := json.NewDecoder(r.Body)
