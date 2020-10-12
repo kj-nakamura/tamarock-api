@@ -82,7 +82,7 @@ func GetArticle(id int) Article {
 // GetArticles is 記事を複数返す
 func GetArticles() []Article {
 	var articles []Article
-	DbConnection.Find(&articles)
+	DbConnection.Order("created_at desc").Find(&articles)
 
 	return articles
 }

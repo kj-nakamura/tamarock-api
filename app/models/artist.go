@@ -91,7 +91,7 @@ func GetArtistInfoFromArtistID(artistID string) ArtistInfo {
 // GetArtists is アーティスト情報を複数返す
 func GetArtistInfos() []ArtistInfo {
 	var artistInfos []ArtistInfo
-	DbConnection.Find(&artistInfos)
+	DbConnection.Order("updated_at desc").Find(&artistInfos)
 
 	return artistInfos
 }
