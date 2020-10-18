@@ -124,6 +124,13 @@ func getArtistInfosHandler(w http.ResponseWriter, r *http.Request) {
 	responseJSON(w, artists)
 }
 
+func getArtistInfosCountHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	artistCount := models.CountArtistInfos(query)
+
+	responseJSON(w, artistCount)
+}
+
 // web article
 func getArticlesHandler(w http.ResponseWriter, r *http.Request) {
 	start, _ := strconv.Atoi(r.URL.Query().Get("_start"))
@@ -297,6 +304,7 @@ func StartWebServer() error {
 	// artist
 	r.HandleFunc("/api/search", searchArtistHandler).Methods("GET")
 	r.HandleFunc("/api/artist/infos", getArtistInfosHandler).Methods("GET")
+	r.HandleFunc("/api/artist/infos/count", getArtistInfosCountHandler).Methods("GET")
 	r.HandleFunc("/api/artist/info/{id}", getArtistInfoHandler).Methods("GET")
 	r.HandleFunc("/api/artist/{id}", getArtistHandler).Methods("GET")
 
