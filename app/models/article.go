@@ -80,9 +80,29 @@ func GetArticle(id int) Article {
 }
 
 // GetArticles is 記事を複数返す
-func GetArticles() []Article {
+func GetArticles(start int, end int, order string, sort string, query string) []Article {
 	var articles []Article
-	DbConnection.Order("created_at desc").Find(&articles)
+
+	limit := end - start
+
+	sortColumn := sort
+	if sort != "" {
+		sortColumn = "id"
+	}
+
+	createdOrder := sortColumn + " asc"
+	if order == "DESC" {
+		createdOrder = sortColumn + " desc"
+	}
+	DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("title LIKE?", "%"+query+"%").Find(&articles)
 
 	return articles
+}
+
+// 全記事数を取得
+func CountArticle(query string) int {
+	var articles []Article
+	DbConnection.Where("title LIKE?", "%"+query+"%").Find(&articles)
+
+	return len(articles)
 }

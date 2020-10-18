@@ -103,7 +103,12 @@ func getArtistInfoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getArtistInfosHandler(w http.ResponseWriter, r *http.Request) {
-	artistInfos := models.GetArtistInfos()
+	start, _ := strconv.Atoi(r.URL.Query().Get("_start"))
+	end, _ := strconv.Atoi(r.URL.Query().Get("_end"))
+	order := r.URL.Query().Get("_order")
+	sort := r.URL.Query().Get("_sort")
+	query := r.URL.Query().Get("q")
+	artistInfos := models.GetArtistInfos(start, end, order, sort, query)
 
 	var artists []*spotify.FullArtist
 	for _, artistInfo := range artistInfos {
@@ -121,10 +126,21 @@ func getArtistInfosHandler(w http.ResponseWriter, r *http.Request) {
 
 // web article
 func getArticlesHandler(w http.ResponseWriter, r *http.Request) {
-	articles := models.GetArticles()
+	start, _ := strconv.Atoi(r.URL.Query().Get("_start"))
+	end, _ := strconv.Atoi(r.URL.Query().Get("_end"))
+	order := r.URL.Query().Get("_order")
+	sort := r.URL.Query().Get("_sort")
+	query := r.URL.Query().Get("q")
+	articles := models.GetArticles(start, end, order, sort, query)
 
-	w.Header().Set("X-Total-Count", strconv.Itoa(len(articles)))
 	responseJSON(w, articles)
+}
+
+func getArticleCountHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	articleCount := models.CountArticle(query)
+
+	responseJSON(w, articleCount)
 }
 
 func getArticleHandler(w http.ResponseWriter, r *http.Request) {
@@ -141,9 +157,15 @@ func getArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 // admin artist
 func getAdminArtistsHandler(w http.ResponseWriter, r *http.Request) {
-	artistInfos := models.GetArtistInfos()
+	start, _ := strconv.Atoi(r.URL.Query().Get("_start"))
+	end, _ := strconv.Atoi(r.URL.Query().Get("_end"))
+	order := r.URL.Query().Get("_order")
+	sort := r.URL.Query().Get("_sort")
+	query := r.URL.Query().Get("q")
+	artistInfos := models.GetArtistInfos(start, end, order, sort, query)
+	artistCount := models.CountArtistInfos(query)
 
-	w.Header().Set("X-Total-Count", strconv.Itoa(len(artistInfos)))
+	w.Header().Set("X-Total-Count", strconv.Itoa(artistCount))
 	responseJSON(w, artistInfos)
 }
 
@@ -189,9 +211,15 @@ func deleteArtistHandler(w http.ResponseWriter, r *http.Request) {
 
 // admin article
 func getAdminArticlesHandler(w http.ResponseWriter, r *http.Request) {
-	articles := models.GetArticles()
+	start, _ := strconv.Atoi(r.URL.Query().Get("_start"))
+	end, _ := strconv.Atoi(r.URL.Query().Get("_end"))
+	order := r.URL.Query().Get("_order")
+	sort := r.URL.Query().Get("_sort")
+	query := r.URL.Query().Get("q")
+	articles := models.GetArticles(start, end, order, sort, query)
+	articleCount := models.CountArticle(query)
 
-	w.Header().Set("X-Total-Count", strconv.Itoa(len(articles)))
+	w.Header().Set("X-Total-Count", strconv.Itoa(articleCount))
 	responseJSON(w, articles)
 }
 
@@ -274,6 +302,7 @@ func StartWebServer() error {
 
 	// article
 	r.HandleFunc("/api/articles", getArticlesHandler).Methods("GET")
+	r.HandleFunc("/api/articles/count", getArticleCountHandler).Methods("GET")
 	r.HandleFunc("/api/articles/{id}", getArticleHandler).Methods("GET")
 
 	// admin

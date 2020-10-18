@@ -89,9 +89,29 @@ func GetArtistInfoFromArtistID(artistID string) ArtistInfo {
 }
 
 // GetArtists is アーティスト情報を複数返す
-func GetArtistInfos() []ArtistInfo {
+func GetArtistInfos(start int, end int, order string, sort string, query string) []ArtistInfo {
 	var artistInfos []ArtistInfo
-	DbConnection.Order("updated_at desc").Find(&artistInfos)
+
+	limit := end - start
+
+	sortColumn := sort
+	if sort != "" {
+		sortColumn = "id"
+	}
+
+	createdOrder := sortColumn + " asc"
+	if order == "DESC" {
+		createdOrder = sortColumn + " desc"
+	}
+	DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("name LIKE?", "%"+query+"%").Find(&artistInfos)
 
 	return artistInfos
+}
+
+// 全記事数を取得
+func CountArtistInfos(query string) int {
+	var artistInfos []ArtistInfo
+	DbConnection.Where("name LIKE?", "%"+query+"%").Find(&artistInfos)
+
+	return len(artistInfos)
 }
