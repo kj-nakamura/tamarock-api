@@ -69,7 +69,7 @@ func GetMovies(query string, searchType string, maxResults int64) []string {
 
 	// Make the API call to YouTube.
 	call := service.Search.List([]string{"id", "snippet"}).
-		Q(query).
+		Q(query + "アーティスト").
 		Type(searchType).
 		MaxResults(maxResults)
 	response, err := call.Do()
