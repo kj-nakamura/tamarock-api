@@ -67,9 +67,8 @@ func GetMovies(query string, searchType string, maxResults int64) []string {
 		log.Fatalf("Error creating new YouTube client: %v", err)
 	}
 
-	// Make the API call to YouTube.
 	call := service.Search.List([]string{"id", "snippet"}).
-		Q(query + "MV").
+		Q(query + " MV").
 		Type(searchType).
 		MaxResults(maxResults)
 	response, err := call.Do()
@@ -77,10 +76,7 @@ func GetMovies(query string, searchType string, maxResults int64) []string {
 		fmt.Println(err)
 	}
 
-	// Group video, channel, and playlist results in separate lists.
 	var videos []string
-
-	// Iterate through each item and add it to the correct list.
 	for _, item := range response.Items {
 		switch item.Id.Kind {
 		case "youtube#video":
