@@ -92,8 +92,6 @@ func GetArtistInfoFromArtistID(artistID string) ArtistInfo {
 func GetArtistInfos(start int, end int, order string, sort string, query string) []ArtistInfo {
 	var artistInfos []ArtistInfo
 
-	limit := end - start
-
 	sortColumn := sort
 	if sort != "" {
 		sortColumn = "id"
@@ -103,7 +101,11 @@ func GetArtistInfos(start int, end int, order string, sort string, query string)
 	if order == "DESC" {
 		createdOrder = sortColumn + " desc"
 	}
-	DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("name LIKE?", "%"+query+"%").Find(&artistInfos)
+	if end > 0 && start > 0 {
+		limit := end - start
+		DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("name LIKE?", "%"+query+"%").Find(&artistInfos)
+	}
+	DbConnection.Find(&artistInfos)
 
 	return artistInfos
 }
