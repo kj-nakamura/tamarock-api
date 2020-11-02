@@ -69,6 +69,7 @@ func searchArtistHandler(w http.ResponseWriter, r *http.Request) {
 	result, err := client.Search(artistName, spotify.SearchTypeArtist) // artistName
 	if err != nil {
 		log.Fatalf("couldn't get artists: %v", err)
+		return
 	}
 
 	// json出力
@@ -81,6 +82,7 @@ func getArtistHandler(w http.ResponseWriter, r *http.Request) {
 	ID := vars["id"]
 
 	artist := models.GetSpotifyArtist(ID)
+	fmt.Println(artist)
 
 	// json出力
 	responseJSON(w, artist)
@@ -110,18 +112,19 @@ func getArtistInfosHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	artistInfos := models.GetArtistInfos(start, end, order, sort, query)
 
-	var artists []*spotify.FullArtist
-	for _, artistInfo := range artistInfos {
-		client := models.GetClient()
-		artist, err := client.GetArtist(spotify.ID(artistInfo.ArtistId))
-		if err != nil {
-			fmt.Println(err)
-		}
-		artists = append(artists, artist)
-	}
+	// var artists []*spotify.FullArtist
+	// for _, artistInfo := range artistInfos {
+	// 	client := models.GetClient()
+	// 	artist, err := client.GetArtist(spotify.ID(artistInfo.ArtistId))
+	// 	models.NewSpotifyArtist(artistInfo.id, artistInfo.ArtistId, artistInfo.CreatedAt, artistInfo.UpdatedAt, artist.)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 	}
+	// 	artists = append(artists, artist)
+	// }
 
 	// json出力
-	responseJSON(w, artists)
+	responseJSON(w, artistInfos)
 }
 
 func getArtistInfosCountHandler(w http.ResponseWriter, r *http.Request) {

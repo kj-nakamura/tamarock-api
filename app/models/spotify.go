@@ -47,10 +47,11 @@ func GetClient() spotify.Client {
 func GetSpotifyArtist(artistID string) *SpotifyArtistInfo {
 	client := GetClient()
 	result, err := client.GetArtist(spotify.ID(artistID)) // artistID
-
 	if err != nil {
-		log.Fatalf("couldn't get artists: %v", err)
+		fmt.Sprintf("couldn't get artists: %v", err)
+		return nil
 	}
+
 	videos := GetMovies(result.Name, "video", 6)
 
 	return NewSpotifyArtist(result, videos)
@@ -64,7 +65,7 @@ func GetMovies(query string, searchType string, maxResults int64) []string {
 
 	service, err := youtube.New(client)
 	if err != nil {
-		log.Fatalf("Error creating new YouTube client: %v", err)
+		fmt.Sprintf("Error creating new YouTube client: %v", err)
 	}
 
 	call := service.Search.List([]string{"id", "snippet"}).
