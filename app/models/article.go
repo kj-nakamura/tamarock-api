@@ -83,21 +83,20 @@ func GetArticle(id int) Article {
 func GetArticles(start int, end int, order string, sort string, query string) []Article {
 	var articles []Article
 
-	sortColumn := sort
-	if sort != "" {
-		sortColumn = "id"
-	}
-
-	createdOrder := sortColumn + " asc"
-	if order == "DESC" {
-		createdOrder = sortColumn + " desc"
-	}
-
-	if end > 0 && start > 0 {
+	if end > 0 {
+		sortColumn := sort
+		if sort == "" {
+			sortColumn = "id"
+		}
+		createdOrder := sortColumn + " asc"
+		if order == "DESC" {
+			createdOrder = sortColumn + " desc"
+		}
 		limit := end - start
 		DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("title LIKE?", "%"+query+"%").Find(&articles)
+	} else {
+		DbConnection.Find(&articles)
 	}
-	DbConnection.Find(&articles)
 
 	return articles
 }
