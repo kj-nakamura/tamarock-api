@@ -68,17 +68,30 @@ func CreateArticle(r *http.Request) Article {
 }
 
 func UpdateArticle(r *http.Request, id int) Article {
-	var article Article
-
+	// リクエストをjsonに変える
+	var requestArticleData RequestArticleData
 	dec := json.NewDecoder(r.Body)
-	for err := dec.Decode(&article); err != nil && err != io.EOF; {
-		log.Println("ERROR: " + err.Error())
+	for err := dec.Decode(&requestArticleData); err != nil && err != io.EOF; {
+		log.Println("article ERROR: " + err.Error())
 	}
 
-	result := DbConnection.Table("articles").Where("id = ?", id).Update(map[string]interface{}{
-		"title":    article.Title,
-		"text":     article.Text,
-		"category": article.Category,
+	// 連携を一度解除する
+	var article Article
+	var artistInfos []ArtistInfo
+	DbConnection.First(&article, id)
+	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
+	DbConnection.Model(&article).Association("Artists").Delete(artistInfos)
+
+	// リクエストからアーティスト情報を取得
+	DbConnection.Where(requestArticleData.ArtistIds).Find(&artistInfos)
+
+	// 記事を保存
+	result := DbConnection.Model(&article).Updates(Article{
+		ID:       requestArticleData.ID,
+		Title:    requestArticleData.Title,
+		Text:     requestArticleData.Text,
+		Category: requestArticleData.Category,
+		Artists:  artistInfos,
 	})
 
 	if result.Error != nil {
@@ -95,14 +108,27 @@ func DeleteArticle(id int) {
 }
 
 // GetArticle is 引数のIDに合致した記事を返す
-func GetArticle(id int) Article {
+func GetArticle(id int) RequestArticleData {
+	// 関連するアーティストを取得
 	var article Article
 	var artistInfos []ArtistInfo
 	DbConnection.First(&article, id)
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
-	article.Artists = artistInfos
 
-	return article
+	// レスポンス用データを形成
+	var artistData []int
+	for _, artistInfo := range artistInfos {
+		artistData = append(artistData, int(artistInfo.ID))
+	}
+	requestArticleData := RequestArticleData{
+		ID:        article.ID,
+		Title:     article.Title,
+		Text:      article.Text,
+		Category:  article.Category,
+		ArtistIds: artistData,
+	}
+
+	return requestArticleData
 }
 
 // GetArticles is 記事を複数返す
