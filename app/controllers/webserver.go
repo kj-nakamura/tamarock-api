@@ -271,6 +271,9 @@ func deleteAdminArticleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	models.DeleteArticle(ID)
+
+	// 一覧を返す
+	getAdminArticlesHandler(w, r)
 }
 
 // healthCheckHandler is ALBによるヘルスチェック用

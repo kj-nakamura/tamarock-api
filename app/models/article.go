@@ -104,7 +104,12 @@ func UpdateArticle(r *http.Request, id int) Article {
 func DeleteArticle(id int) {
 	var article Article
 
-	DbConnection.Delete(&article, id)
+	var artistInfos []ArtistInfo
+	DbConnection.First(&article, id)
+	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
+	DbConnection.Model(&article).Association("Artists").Delete(artistInfos)
+
+	DbConnection.Delete(&article)
 }
 
 // GetArticle is 引数のIDに合致した記事を返す
