@@ -14,8 +14,8 @@ import (
 // ArtistInfo is table
 type ArtistInfo struct {
 	ID        uint       `gorm:"primary_key" json:"id"`
-	ArtistId  string     `gorm:"primary_key: not null" json:"artist_id"`
-	Name      string     `json:"name"`
+	ArtistId  string     `gorm:"not null" json:"artist_id"`
+	Name      string     `gorm:"not null" json:"name"`
 	Url       string     `json:"url"`
 	TwitterId string     `json:"twitter_id"`
 	CreatedAt time.Time  `json:"created_at"`

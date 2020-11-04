@@ -13,10 +13,22 @@ import (
 
 // Article is table
 type Article struct {
+	ID        uint         `gorm:"primarykey" json:"id"`
+	Title     string       `json:"title"`
+	Text      string       `gorm:"text" json:"text"`
+	Category  int          `json:"category"`
+	Artists   []ArtistInfo `gorm:"many2many:article_artist_infos;" json:"artists"`
+	CreatedAt time.Time    `json:"createdat"`
+	UpdatedAt time.Time    `json:"updatedat"`
+	DeletedAt *time.Time   `json:"deletedat"`
+}
+
+type RequestArticleData struct {
 	ID        uint       `gorm:"primarykey" json:"id"`
 	Title     string     `json:"title"`
 	Text      string     `gorm:"text" json:"text"`
 	Category  int        `json:"category"`
+	ArtistIds []int      `json:"artist_ids"`
 	CreatedAt time.Time  `json:"createdat"`
 	UpdatedAt time.Time  `json:"updatedat"`
 	DeletedAt *time.Time `json:"deletedat"`
@@ -24,18 +36,30 @@ type Article struct {
 
 func migrateArticle() {
 	DbConnection.AutoMigrate(&Article{})
-	DbConnection.Model(&Article{}).ModifyColumn("text", "text")
 }
 
+// CreateArticle is 記事を作成する
 func CreateArticle(r *http.Request) Article {
-	var article Article
+	// リクエストをjsonに変える
+	var requestArticleData RequestArticleData
 	dec := json.NewDecoder(r.Body)
-	for err := dec.Decode(&article); err != nil && err != io.EOF; {
-		log.Println("ERROR: " + err.Error())
+	for err := dec.Decode(&requestArticleData); err != nil && err != io.EOF; {
+		log.Println("article ERROR: " + err.Error())
 	}
 
-	result := DbConnection.Create(&article)
+	// リクエストからアーティスト情報を取得
+	var artistInfos []ArtistInfo
+	DbConnection.Where(requestArticleData.ArtistIds).Find(&artistInfos)
 
+	// 記事を保存
+	article := Article{
+		ID:       requestArticleData.ID,
+		Title:    requestArticleData.Title,
+		Text:     requestArticleData.Text,
+		Category: requestArticleData.Category,
+		Artists:  artistInfos,
+	}
+	result := DbConnection.Create(&article)
 	if result.Error != nil {
 		fmt.Println(result.Error)
 	}
@@ -73,8 +97,10 @@ func DeleteArticle(id int) {
 // GetArticle is 引数のIDに合致した記事を返す
 func GetArticle(id int) Article {
 	var article Article
-
+	var artistInfos []ArtistInfo
 	DbConnection.First(&article, id)
+	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
+	article.Artists = artistInfos
 
 	return article
 }
