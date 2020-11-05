@@ -240,7 +240,7 @@ func getAdminArticleHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	article := models.GetArticle(ID)
+	article := models.GetAdminArticle(ID)
 
 	responseJSON(w, article)
 }

@@ -113,7 +113,21 @@ func DeleteArticle(id int) {
 }
 
 // GetArticle is 引数のIDに合致した記事を返す
-func GetArticle(id int) RequestArticleData {
+func GetArticle(id int) Article {
+	// 記事を取得
+	var article Article
+	var artistInfos []ArtistInfo
+	DbConnection.First(&article, id)
+
+	// アーティスト情報取得
+	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
+	article.Artists = artistInfos
+
+	return article
+}
+
+// GetAdminArticle is 引数のIDに合致した記事を返す
+func GetAdminArticle(id int) RequestArticleData {
 	// 関連するアーティストを取得
 	var article Article
 	var artistInfos []ArtistInfo
@@ -158,7 +172,7 @@ func GetArticles(start int, end int, order string, sort string, query string) []
 	return articles
 }
 
-// 全記事数を取得
+// CountArticle is 全記事数を取得
 func CountArticle(query string) int {
 	var articles []Article
 	DbConnection.Where("title LIKE?", "%"+query+"%").Find(&articles)
