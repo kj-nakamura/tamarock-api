@@ -9,33 +9,34 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/gorm"
 )
 
 // Article is table
 type Article struct {
-	ID        uint         `gorm:"primarykey" json:"id"`
-	Title     string       `json:"title"`
-	Text      string       `gorm:"text" json:"text"`
-	Category  int          `json:"category"`
-	Artists   []ArtistInfo `gorm:"many2many:article_artist_infos;" json:"artists"`
-	CreatedAt time.Time    `json:"createdat"`
-	UpdatedAt time.Time    `json:"updatedat"`
-	DeletedAt *time.Time   `json:"deletedat"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	Title     string         `json:"title"`
+	Text      string         `gorm:"text" json:"text"`
+	Category  int            `json:"category"`
+	Artists   []ArtistInfo   `gorm:"many2many:article_artist_infos;" json:"artists"`
+	CreatedAt time.Time      `json:"createdat"`
+	UpdatedAt time.Time      `json:"updatedat"`
+	DeletedAt gorm.DeletedAt `json:"deletedat"`
 }
 
 type RequestArticleData struct {
-	ID        uint       `gorm:"primarykey" json:"id"`
-	Title     string     `json:"title"`
-	Text      string     `gorm:"text" json:"text"`
-	Category  int        `json:"category"`
-	ArtistIds []int      `json:"artist_ids"`
-	CreatedAt time.Time  `json:"createdat"`
-	UpdatedAt time.Time  `json:"updatedat"`
-	DeletedAt *time.Time `json:"deletedat"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	Title     string         `json:"title"`
+	Text      string         `gorm:"text" json:"text"`
+	Category  int            `json:"category"`
+	ArtistIds []int          `json:"artist_ids"`
+	CreatedAt time.Time      `json:"createdat"`
+	UpdatedAt time.Time      `json:"updatedat"`
+	DeletedAt gorm.DeletedAt `json:"deletedat"`
 }
 
 func migrateArticle() {
-	// DbConnection.AutoMigrate(&Article{})
+	DbConnection.AutoMigrate(&Article{})
 }
 
 // CreateArticle is 記事を作成する
