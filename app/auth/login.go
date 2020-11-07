@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type JWT struct {
@@ -145,7 +147,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// 認証キー(Email)のユーザー情報をDBから取得
 	if result := models.DbConnection.Where("email = ?", user.Email).Find(&user); result.Error != nil {
-		if result.RecordNotFound() {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			error.Message = "ユーザが存在しません。"
 			http.Error(w, error.Message, http.StatusBadRequest)
 			return
@@ -193,7 +195,6 @@ func TokenVerifyMiddleWare(next http.HandlerFunc) http.HandlerFunc {
 		// HTTP リクエストヘッダーを読み取る
 		authHeader := r.Header.Get("Authorization")
 		// Restlet Client から以下のような文字列を渡す
-		// bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3Q5OUBleGFtcGxlLmNvLmpwIiwiaXNzIjoiY291cnNlIn0.7lJKe5SlUbdo2uKO_iLzzeGoxghG7SXsC3w-4qBRLvs
 		bearerToken := strings.Split(authHeader, " ")
 
 		if len(bearerToken) == 2 {

@@ -6,12 +6,8 @@ import (
 	// orm
 	"api/config"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
-)
-
-const (
-	TableNameArtists = "artist_infos"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 // DbConnection is for using global
@@ -19,12 +15,14 @@ var DbConnection *gorm.DB
 
 func init() {
 	var err error
-	DbConnection, err = gorm.Open(config.Config.SQLDriver, config.Env.DbUserName+":"+config.Env.DbPassword+"@tcp("+config.Env.DbHost+":3306)/"+config.Env.DbName+"?charset=utf8&parseTime=true")
+	dsn := config.Env.DbUserName + ":" + config.Env.DbPassword + "@tcp(" + config.Env.DbHost + ":3306)/" + config.Env.DbName + "?charset=utf8&parseTime=true"
+	DbConnection, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	migrateAdminUser()
-	migrateArtistInfo()
-	migrateArticle()
+	// migrateAdminUser()
+	// migrateArtistInfo()
+	// migrateArticle()
+	// migrateCategory()
 }

@@ -8,19 +8,20 @@ import (
 	"net/http"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 // ArtistInfo is table
 type ArtistInfo struct {
-	ID        uint       `gorm:"primary_key" json:"id"`
-	ArtistId  string     `gorm:"not null" json:"artist_id"`
-	Name      string     `gorm:"not null" json:"name"`
-	Url       string     `json:"url"`
-	TwitterId string     `json:"twitter_id"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	ArtistId  string         `gorm:"not null" json:"artist_id"`
+	Name      string         `gorm:"not null" json:"name"`
+	Url       string         `json:"url"`
+	TwitterId string         `json:"twitter_id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at"`
 }
 
 func migrateArtistInfo() {
@@ -51,11 +52,11 @@ func UpdateArtistInfo(r *http.Request, id int) ArtistInfo {
 		log.Println("ERROR: " + err.Error())
 	}
 
-	result := DbConnection.Table("artist_infos").Where("id = ?", id).Update(map[string]interface{}{
-		"artist_id":  artistInfo.ArtistId,
-		"name":       artistInfo.Name,
-		"url":        artistInfo.Url,
-		"twitter_id": artistInfo.TwitterId,
+	result := DbConnection.Model(&artistInfo).Where("id = ?", id).Updates(ArtistInfo{
+		ArtistId:  artistInfo.ArtistId,
+		Name:      artistInfo.Name,
+		Url:       artistInfo.Url,
+		TwitterId: artistInfo.TwitterId,
 	})
 
 	if result.Error != nil {

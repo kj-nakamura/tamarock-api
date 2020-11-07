@@ -9,29 +9,30 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/gorm"
 )
 
 // Article is table
 type Article struct {
-	ID        uint         `gorm:"primarykey" json:"id"`
-	Title     string       `json:"title"`
-	Text      string       `gorm:"text" json:"text"`
-	Category  int          `json:"category"`
-	Artists   []ArtistInfo `gorm:"many2many:article_artist_infos;" json:"artists"`
-	CreatedAt time.Time    `json:"createdat"`
-	UpdatedAt time.Time    `json:"updatedat"`
-	DeletedAt *time.Time   `json:"deletedat"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	Title     string         `json:"title"`
+	Text      string         `gorm:"text" json:"text"`
+	Category  int            `json:"category"`
+	Artists   []ArtistInfo   `gorm:"many2many:article_artist_infos;" json:"artists"`
+	CreatedAt time.Time      `json:"createdat"`
+	UpdatedAt time.Time      `json:"updatedat"`
+	DeletedAt gorm.DeletedAt `json:"deletedat"`
 }
 
 type RequestArticleData struct {
-	ID        uint       `gorm:"primarykey" json:"id"`
-	Title     string     `json:"title"`
-	Text      string     `gorm:"text" json:"text"`
-	Category  int        `json:"category"`
-	ArtistIds []int      `json:"artist_ids"`
-	CreatedAt time.Time  `json:"createdat"`
-	UpdatedAt time.Time  `json:"updatedat"`
-	DeletedAt *time.Time `json:"deletedat"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	Title     string         `json:"title"`
+	Text      string         `gorm:"text" json:"text"`
+	Category  int            `json:"category"`
+	ArtistIds []int          `json:"artist_ids"`
+	CreatedAt time.Time      `json:"createdat"`
+	UpdatedAt time.Time      `json:"updatedat"`
+	DeletedAt gorm.DeletedAt `json:"deletedat"`
 }
 
 func migrateArticle() {
@@ -86,16 +87,16 @@ func UpdateArticle(r *http.Request, id int) Article {
 	DbConnection.Where(requestArticleData.ArtistIds).Find(&artistInfos)
 
 	// 記事を保存
-	result := DbConnection.Model(&article).Updates(Article{
+	articleData := Article{
 		ID:       requestArticleData.ID,
 		Title:    requestArticleData.Title,
 		Text:     requestArticleData.Text,
 		Category: requestArticleData.Category,
 		Artists:  artistInfos,
-	})
-
+	}
+	result := DbConnection.Updates(articleData)
 	if result.Error != nil {
-		fmt.Println(result.Error)
+		fmt.Printf("update error: %s", result.Error)
 	}
 
 	return article
