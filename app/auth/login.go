@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type JWT struct {
@@ -145,7 +147,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// 認証キー(Email)のユーザー情報をDBから取得
 	if result := models.DbConnection.Where("email = ?", user.Email).Find(&user); result.Error != nil {
-		if result.RecordNotFound() {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// if result.ErrRecordNotFound() {
 			error.Message = "ユーザが存在しません。"
 			http.Error(w, error.Message, http.StatusBadRequest)
 			return
