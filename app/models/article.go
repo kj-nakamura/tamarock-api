@@ -35,7 +35,7 @@ type RequestArticleData struct {
 }
 
 func migrateArticle() {
-	DbConnection.AutoMigrate(&Article{})
+	// DbConnection.AutoMigrate(&Article{})
 }
 
 // CreateArticle is 記事を作成する
@@ -86,16 +86,16 @@ func UpdateArticle(r *http.Request, id int) Article {
 	DbConnection.Where(requestArticleData.ArtistIds).Find(&artistInfos)
 
 	// 記事を保存
-	result := DbConnection.Model(&article).Updates(Article{
+	articleData := Article{
 		ID:       requestArticleData.ID,
 		Title:    requestArticleData.Title,
 		Text:     requestArticleData.Text,
 		Category: requestArticleData.Category,
 		Artists:  artistInfos,
-	})
-
+	}
+	result := DbConnection.Updates(articleData)
 	if result.Error != nil {
-		fmt.Println(result.Error)
+		fmt.Printf("update error: %s", result.Error)
 	}
 
 	return article

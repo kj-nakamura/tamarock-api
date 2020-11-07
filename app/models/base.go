@@ -22,8 +22,8 @@ func init() {
 		log.Fatalln(err)
 	}
 
-	migrateAdminUser()
-	migrateArtistInfo()
-	migrateArticle()
+	// migrateAdminUser()
+	// migrateArtistInfo()
+	// migrateArticle()
 	// migrateCategory()
 }
