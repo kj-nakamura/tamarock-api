@@ -141,7 +141,8 @@ func getArticlesHandler(w http.ResponseWriter, r *http.Request) {
 	order := r.URL.Query().Get("_order")
 	sort := r.URL.Query().Get("_sort")
 	query := r.URL.Query().Get("q")
-	articles := models.GetArticles(start, end, order, sort, query)
+	column := r.URL.Query().Get("column")
+	articles := models.GetArticles(start, end, order, sort, query, column)
 
 	responseJSON(w, articles)
 }
@@ -226,7 +227,8 @@ func getAdminArticlesHandler(w http.ResponseWriter, r *http.Request) {
 	order := r.URL.Query().Get("_order")
 	sort := r.URL.Query().Get("_sort")
 	query := r.URL.Query().Get("q")
-	articles := models.GetArticles(start, end, order, sort, query)
+	column := r.URL.Query().Get("column")
+	articles := models.GetArticles(start, end, order, sort, query, column)
 	articleCount := models.CountArticle(query)
 
 	w.Header().Set("X-Total-Count", strconv.Itoa(articleCount))
@@ -274,6 +276,63 @@ func deleteAdminArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 	// 一覧を返す
 	getAdminArticlesHandler(w, r)
+}
+
+// admin category
+func getAdminCategoriesHandler(w http.ResponseWriter, r *http.Request) {
+	start, _ := strconv.Atoi(r.URL.Query().Get("_start"))
+	end, _ := strconv.Atoi(r.URL.Query().Get("_end"))
+	order := r.URL.Query().Get("_order")
+	sort := r.URL.Query().Get("_sort")
+	query := r.URL.Query().Get("q")
+	categories := models.GetCategories(start, end, order, sort, query)
+	categoryCount := models.CountCategory(query)
+
+	w.Header().Set("X-Total-Count", strconv.Itoa(categoryCount))
+	responseJSON(w, categories)
+}
+
+func getAdminCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	ID, err := getID(w, r)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	article := models.GetAdminCategory(ID)
+
+	responseJSON(w, article)
+}
+
+func createAdminCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	category := models.CreateCategory(r)
+
+	responseJSON(w, category)
+}
+
+func updateAdminCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	ID, err := getID(w, r)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	category := models.UpdateCategory(r, ID)
+
+	responseJSON(w, category)
+}
+
+func deleteAdminCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	ID, err := getID(w, r)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	models.DeleteCategory(ID)
+
+	// 一覧を返す
+	getAdminCategoriesHandler(w, r)
 }
 
 // healthCheckHandler is ALBによるヘルスチェック用
@@ -327,12 +386,19 @@ func StartWebServer() error {
 	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(updateArtistHandler)).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(deleteArtistHandler)).Methods("DELETE", "OPTIONS")
 
-	// // article
+	// article
 	r.HandleFunc("/api/admin/articles", auth.TokenVerifyMiddleWare(getAdminArticlesHandler)).Methods("GET", "OPTIONS")
 	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(getAdminArticleHandler)).Methods("GET", "OPTIONS")
 	r.HandleFunc("/api/admin/articles", auth.TokenVerifyMiddleWare(createAdminArticleHandler)).Methods("POST", "OPTIONS")
 	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(updateAdminArticleHandler)).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(deleteAdminArticleHandler)).Methods("DELETE", "OPTIONS")
+
+	// category
+	r.HandleFunc("/api/admin/categories", auth.TokenVerifyMiddleWare(getAdminCategoriesHandler)).Methods("GET", "OPTIONS")
+	r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(getAdminCategoryHandler)).Methods("GET", "OPTIONS")
+	r.HandleFunc("/api/admin/categories", auth.TokenVerifyMiddleWare(createAdminCategoryHandler)).Methods("POST", "OPTIONS")
+	r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(updateAdminCategoryHandler)).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(deleteAdminCategoryHandler)).Methods("DELETE", "OPTIONS")
 
 	// auth
 	r.HandleFunc("/api/admin/login", auth.Login).Methods("POST", "OPTIONS")
