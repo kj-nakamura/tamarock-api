@@ -24,5 +24,5 @@ func init() {
 	// migrateAdminUser()
 	// migrateArtistInfo()
 	// migrateArticle()
-	// migrateCategory()
+	migrateCategory()
 }
