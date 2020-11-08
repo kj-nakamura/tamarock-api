@@ -31,6 +31,15 @@ type RequestCategoryData struct {
 	DeletedAt  gorm.DeletedAt `json:"deleted_at" json:"deleted_at"`
 }
 
+// UpdateCategoryData is request data
+type UpdateCategoryData struct {
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	Name      string         `gorm:"not null" json:"name"`
+	CreatedAt time.Time      `json:"created_at" json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at" json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at" json:"deleted_at"`
+}
+
 func migrateCategory() {
 	DbConnection.AutoMigrate(&Category{})
 }
@@ -53,6 +62,24 @@ func CreateCategory(r *http.Request) Category {
 	result := DbConnection.Model(&category).Create(categoryData)
 	if result.Error != nil {
 		fmt.Println(result.Error)
+	}
+
+	return category
+}
+
+func UpdateCategory(r *http.Request, id int) Category {
+	// リクエストをjsonに変える
+	var updateCategoryData UpdateCategoryData
+	dec := json.NewDecoder(r.Body)
+	for err := dec.Decode(&updateCategoryData); err != nil && err != io.EOF; {
+		log.Println("article ERROR: " + err.Error())
+	}
+
+	// カテゴリを保存
+	var category Category
+	result := DbConnection.Model(&category).Where("id = ?", uint(id)).Update("name", updateCategoryData.Name)
+	if result.Error != nil {
+		fmt.Printf("update error: %s", result.Error)
 	}
 
 	return category

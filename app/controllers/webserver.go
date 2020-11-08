@@ -308,6 +308,18 @@ func createAdminCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	responseJSON(w, category)
 }
 
+func updateAdminCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	ID, err := getID(w, r)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	category := models.UpdateCategory(r, ID)
+
+	responseJSON(w, category)
+}
+
 // healthCheckHandler is ALBによるヘルスチェック用
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	ping := HealthCheck{http.StatusOK, "ok"}
@@ -370,7 +382,7 @@ func StartWebServer() error {
 	r.HandleFunc("/api/admin/categories", auth.TokenVerifyMiddleWare(getAdminCategoriesHandler)).Methods("GET", "OPTIONS")
 	r.HandleFunc("/api/admin/category/{id}", auth.TokenVerifyMiddleWare(getAdminCategoryHandler)).Methods("GET", "OPTIONS")
 	r.HandleFunc("/api/admin/category", auth.TokenVerifyMiddleWare(createAdminCategoryHandler)).Methods("POST", "OPTIONS")
-	// r.HandleFunc("/api/admin/category/{id}", auth.TokenVerifyMiddleWare(updateAdminCategoryHandler)).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/api/admin/category/{id}", auth.TokenVerifyMiddleWare(updateAdminCategoryHandler)).Methods("PUT", "OPTIONS")
 	// r.HandleFunc("/api/admin/category/{id}", auth.TokenVerifyMiddleWare(deleteAdminCategoryHandler)).Methods("DELETE", "OPTIONS")
 
 	// auth
