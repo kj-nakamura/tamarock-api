@@ -85,6 +85,17 @@ func UpdateCategory(r *http.Request, id int) Category {
 	return category
 }
 
+func DeleteCategory(id int) {
+	var category Category
+
+	var articles []Article
+	DbConnection.First(&category, id)
+	DbConnection.Model(&category).Association("Articles").Find(&articles)
+	DbConnection.Model(&category).Association("Articles").Delete(articles)
+
+	DbConnection.Delete(&category)
+}
+
 // GetAdminCategory is 引数のIDに合致した記事を返す
 func GetAdminCategory(id int) RequestCategoryData {
 	// 関連する記事を取得
