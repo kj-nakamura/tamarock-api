@@ -276,6 +276,28 @@ func deleteAdminArticleHandler(w http.ResponseWriter, r *http.Request) {
 	getAdminArticlesHandler(w, r)
 }
 
+// admin category
+func getAdminCategoriesHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("カテゴリ")
+	start, _ := strconv.Atoi(r.URL.Query().Get("_start"))
+	end, _ := strconv.Atoi(r.URL.Query().Get("_end"))
+	order := r.URL.Query().Get("_order")
+	sort := r.URL.Query().Get("_sort")
+	query := r.URL.Query().Get("q")
+	categories := models.GetCategories(start, end, order, sort, query)
+	fmt.Println(categories)
+	categoryCount := models.CountCategory(query)
+
+	w.Header().Set("X-Total-Count", strconv.Itoa(categoryCount))
+	responseJSON(w, categories)
+}
+
+func createAdminCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	category := models.CreateCategory(r)
+
+	responseJSON(w, category)
+}
+
 // healthCheckHandler is ALBによるヘルスチェック用
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	ping := HealthCheck{http.StatusOK, "ok"}
@@ -327,12 +349,19 @@ func StartWebServer() error {
 	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(updateArtistHandler)).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/api/admin/artists/{id}", auth.TokenVerifyMiddleWare(deleteArtistHandler)).Methods("DELETE", "OPTIONS")
 
-	// // article
+	// article
 	r.HandleFunc("/api/admin/articles", auth.TokenVerifyMiddleWare(getAdminArticlesHandler)).Methods("GET", "OPTIONS")
 	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(getAdminArticleHandler)).Methods("GET", "OPTIONS")
 	r.HandleFunc("/api/admin/articles", auth.TokenVerifyMiddleWare(createAdminArticleHandler)).Methods("POST", "OPTIONS")
 	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(updateAdminArticleHandler)).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/api/admin/articles/{id}", auth.TokenVerifyMiddleWare(deleteAdminArticleHandler)).Methods("DELETE", "OPTIONS")
+
+	// category
+	r.HandleFunc("/api/admin/categories", auth.TokenVerifyMiddleWare(getAdminCategoriesHandler)).Methods("GET", "OPTIONS")
+	// r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(getAdminCategoryHandler)).Methods("GET", "OPTIONS")
+	r.HandleFunc("/api/admin/category", auth.TokenVerifyMiddleWare(createAdminCategoryHandler)).Methods("POST", "OPTIONS")
+	// r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(updateAdminCategoryHandler)).Methods("PUT", "OPTIONS")
+	// r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(deleteAdminCategoryHandler)).Methods("DELETE", "OPTIONS")
 
 	// auth
 	r.HandleFunc("/api/admin/login", auth.Login).Methods("POST", "OPTIONS")

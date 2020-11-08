@@ -1,17 +1,79 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"time"
+
+	"gorm.io/gorm"
+)
 
 // Category is table
 type Category struct {
-	ID        uint       `gorm:"primary_key" json:"id"`
-	Name      string     `gorm:"not null" json:"name"`
-	Articles  []Article  `json:"articles"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	Name      string         `gorm:"not null" json:"name"`
+	Articles  []Article      `gorm:"foreignKey:Category" json:"articles"`
+	CreatedAt time.Time      `json:"created_at" json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at" json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at" json:"deleted_at"`
 }
 
 func migrateCategory() {
-	// DbConnection.AutoMigrate(&Category{})
+	DbConnection.AutoMigrate(&Category{})
+}
+
+func CreateCategory(r *http.Request) Category {
+	// リクエストをjsonに変える
+	var category Category
+	dec := json.NewDecoder(r.Body)
+	for err := dec.Decode(&category); err != nil && err != io.EOF; {
+		log.Println("category ERROR: " + err.Error())
+	}
+
+	// カテゴリを保存
+	fmt.Println(time.Now())
+	categoryData := map[string]interface{}{
+		"Name":      category.Name,
+		"CreatedAt": time.Now(),
+		"UpdatedAt": time.Now(),
+	}
+	result := DbConnection.Model(&category).Create(categoryData)
+	if result.Error != nil {
+		fmt.Println(result.Error)
+	}
+
+	return category
+}
+
+// GetCategories is カテゴリを複数返す
+func GetCategories(start int, end int, order string, sort string, query string) []Category {
+	var categories []Category
+
+	if end > 0 {
+		sortColumn := sort
+		if sort == "" {
+			sortColumn = "id"
+		}
+		createdOrder := sortColumn + " asc"
+		if order == "DESC" {
+			createdOrder = sortColumn + " desc"
+		}
+		limit := end - start
+		DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("name LIKE?", "%"+query+"%").Find(&categories)
+	} else {
+		DbConnection.Find(&categories)
+	}
+
+	return categories
+}
+
+// CountCategory is 全カテゴリ数を取得
+func CountCategory(query string) int {
+	var categories []Category
+	DbConnection.Where("name LIKE?", "%"+query+"%").Find(&categories)
+
+	return len(categories)
 }
