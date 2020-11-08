@@ -21,6 +21,16 @@ type Category struct {
 	DeletedAt gorm.DeletedAt `json:"deleted_at" json:"deleted_at"`
 }
 
+// RequestCategoryData is request data
+type RequestCategoryData struct {
+	ID         uint           `gorm:"primaryKey" json:"id"`
+	Name       string         `gorm:"not null" json:"name"`
+	ArticleIds []int          `json:"article_ids"`
+	CreatedAt  time.Time      `json:"created_at" json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at" json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `json:"deleted_at" json:"deleted_at"`
+}
+
 func migrateCategory() {
 	DbConnection.AutoMigrate(&Category{})
 }
@@ -46,6 +56,28 @@ func CreateCategory(r *http.Request) Category {
 	}
 
 	return category
+}
+
+// GetAdminCategory is 引数のIDに合致した記事を返す
+func GetAdminCategory(id int) RequestCategoryData {
+	// 関連する記事を取得
+	var category Category
+	var articles []Article
+	DbConnection.First(&category, id)
+	DbConnection.Model(&category).Association("Articles").Find(&articles)
+
+	// レスポンス用データを形成
+	var articleData []int
+	for _, article := range articles {
+		articleData = append(articleData, int(article.ID))
+	}
+	requestCategoryData := RequestCategoryData{
+		ID:         category.ID,
+		Name:       category.Name,
+		ArticleIds: articleData,
+	}
+
+	return requestCategoryData
 }
 
 // GetCategories is カテゴリを複数返す

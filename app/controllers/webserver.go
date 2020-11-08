@@ -278,18 +278,28 @@ func deleteAdminArticleHandler(w http.ResponseWriter, r *http.Request) {
 
 // admin category
 func getAdminCategoriesHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("カテゴリ")
 	start, _ := strconv.Atoi(r.URL.Query().Get("_start"))
 	end, _ := strconv.Atoi(r.URL.Query().Get("_end"))
 	order := r.URL.Query().Get("_order")
 	sort := r.URL.Query().Get("_sort")
 	query := r.URL.Query().Get("q")
 	categories := models.GetCategories(start, end, order, sort, query)
-	fmt.Println(categories)
 	categoryCount := models.CountCategory(query)
 
 	w.Header().Set("X-Total-Count", strconv.Itoa(categoryCount))
 	responseJSON(w, categories)
+}
+
+func getAdminCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	ID, err := getID(w, r)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	article := models.GetAdminCategory(ID)
+
+	responseJSON(w, article)
 }
 
 func createAdminCategoryHandler(w http.ResponseWriter, r *http.Request) {
@@ -358,10 +368,10 @@ func StartWebServer() error {
 
 	// category
 	r.HandleFunc("/api/admin/categories", auth.TokenVerifyMiddleWare(getAdminCategoriesHandler)).Methods("GET", "OPTIONS")
-	// r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(getAdminCategoryHandler)).Methods("GET", "OPTIONS")
+	r.HandleFunc("/api/admin/category/{id}", auth.TokenVerifyMiddleWare(getAdminCategoryHandler)).Methods("GET", "OPTIONS")
 	r.HandleFunc("/api/admin/category", auth.TokenVerifyMiddleWare(createAdminCategoryHandler)).Methods("POST", "OPTIONS")
-	// r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(updateAdminCategoryHandler)).Methods("PUT", "OPTIONS")
-	// r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(deleteAdminCategoryHandler)).Methods("DELETE", "OPTIONS")
+	// r.HandleFunc("/api/admin/category/{id}", auth.TokenVerifyMiddleWare(updateAdminCategoryHandler)).Methods("PUT", "OPTIONS")
+	// r.HandleFunc("/api/admin/category/{id}", auth.TokenVerifyMiddleWare(deleteAdminCategoryHandler)).Methods("DELETE", "OPTIONS")
 
 	// auth
 	r.HandleFunc("/api/admin/login", auth.Login).Methods("POST", "OPTIONS")
