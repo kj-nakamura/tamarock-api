@@ -152,7 +152,7 @@ func GetAdminArticle(id int) RequestArticleData {
 }
 
 // GetArticles is 記事を複数返す
-func GetArticles(start int, end int, order string, sort string, query string) []Article {
+func GetArticles(start int, end int, order string, sort string, query string, column string) []Article {
 	var articles []Article
 
 	if end > 0 {
@@ -165,7 +165,11 @@ func GetArticles(start int, end int, order string, sort string, query string) []
 			createdOrder = sortColumn + " desc"
 		}
 		limit := end - start
-		DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("title LIKE?", "%"+query+"%").Find(&articles)
+		if column == "" {
+			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("title LIKE?", "%"+query+"%").Find(&articles)
+		} else {
+			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where(column+" = ?", query).Find(&articles)
+		}
 	} else {
 		DbConnection.Find(&articles)
 	}

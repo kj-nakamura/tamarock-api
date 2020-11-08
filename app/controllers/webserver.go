@@ -141,7 +141,8 @@ func getArticlesHandler(w http.ResponseWriter, r *http.Request) {
 	order := r.URL.Query().Get("_order")
 	sort := r.URL.Query().Get("_sort")
 	query := r.URL.Query().Get("q")
-	articles := models.GetArticles(start, end, order, sort, query)
+	column := r.URL.Query().Get("column")
+	articles := models.GetArticles(start, end, order, sort, query, column)
 
 	responseJSON(w, articles)
 }
@@ -226,7 +227,8 @@ func getAdminArticlesHandler(w http.ResponseWriter, r *http.Request) {
 	order := r.URL.Query().Get("_order")
 	sort := r.URL.Query().Get("_sort")
 	query := r.URL.Query().Get("q")
-	articles := models.GetArticles(start, end, order, sort, query)
+	column := r.URL.Query().Get("column")
+	articles := models.GetArticles(start, end, order, sort, query, column)
 	articleCount := models.CountArticle(query)
 
 	w.Header().Set("X-Total-Count", strconv.Itoa(articleCount))
