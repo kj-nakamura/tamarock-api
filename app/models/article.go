@@ -50,7 +50,9 @@ func CreateArticle(r *http.Request) Article {
 
 	// リクエストからアーティスト情報を取得
 	var artistInfos []ArtistInfo
-	DbConnection.Where(requestArticleData.ArtistIds).Find(&artistInfos)
+	if len(requestArticleData.ArtistIds) > 0 {
+		DbConnection.Where(requestArticleData.ArtistIds).Find(&artistInfos)
+	}
 
 	// 記事を保存
 	article := Article{
