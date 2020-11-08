@@ -64,6 +64,7 @@ func CreateCategory(r *http.Request) Category {
 		fmt.Println(result.Error)
 	}
 
+	DbConnection.Last(&category)
 	return category
 }
 
@@ -87,11 +88,7 @@ func UpdateCategory(r *http.Request, id int) Category {
 
 func DeleteCategory(id int) {
 	var category Category
-
-	var articles []Article
 	DbConnection.First(&category, id)
-	DbConnection.Model(&category).Association("Articles").Find(&articles)
-	DbConnection.Model(&category).Association("Articles").Delete(articles)
 
 	DbConnection.Delete(&category)
 }

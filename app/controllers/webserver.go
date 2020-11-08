@@ -393,10 +393,10 @@ func StartWebServer() error {
 
 	// category
 	r.HandleFunc("/api/admin/categories", auth.TokenVerifyMiddleWare(getAdminCategoriesHandler)).Methods("GET", "OPTIONS")
-	r.HandleFunc("/api/admin/category/{id}", auth.TokenVerifyMiddleWare(getAdminCategoryHandler)).Methods("GET", "OPTIONS")
-	r.HandleFunc("/api/admin/category", auth.TokenVerifyMiddleWare(createAdminCategoryHandler)).Methods("POST", "OPTIONS")
-	r.HandleFunc("/api/admin/category/{id}", auth.TokenVerifyMiddleWare(updateAdminCategoryHandler)).Methods("PUT", "OPTIONS")
-	r.HandleFunc("/api/admin/category/{id}", auth.TokenVerifyMiddleWare(deleteAdminCategoryHandler)).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(getAdminCategoryHandler)).Methods("GET", "OPTIONS")
+	r.HandleFunc("/api/admin/categories", auth.TokenVerifyMiddleWare(createAdminCategoryHandler)).Methods("POST", "OPTIONS")
+	r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(updateAdminCategoryHandler)).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/api/admin/categories/{id}", auth.TokenVerifyMiddleWare(deleteAdminCategoryHandler)).Methods("DELETE", "OPTIONS")
 
 	// auth
 	r.HandleFunc("/api/admin/login", auth.Login).Methods("POST", "OPTIONS")
