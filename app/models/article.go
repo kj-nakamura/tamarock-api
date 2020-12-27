@@ -36,6 +36,18 @@ type Article struct {
 	DeletedAt gorm.DeletedAt `json:"deletedat"`
 }
 
+type ResponseArticleData struct {
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	Title     string         `json:"title"`
+	Pictures  []Picture      `json:"pictures"`
+	Text      string         `gorm:"text" json:"text"`
+	Category  int            `json:"category"`
+	Artists   []ArtistInfo   `gorm:"many2many:article_artist_infos;" json:"artists"`
+	CreatedAt time.Time      `json:"createdat"`
+	UpdatedAt time.Time      `json:"updatedat"`
+	DeletedAt gorm.DeletedAt `json:"deletedat"`
+}
+
 type RequestArticleData struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
 	Title     string         `json:"title"`
@@ -211,7 +223,7 @@ func DeleteArticle(id int) {
 }
 
 // GetArticle is 引数のIDに合致した記事を返す
-func GetArticle(id int) Article {
+func GetArticle(id int) ResponseArticleData {
 	// 記事を取得
 	var article Article
 	var artistInfos []ArtistInfo
@@ -221,7 +233,28 @@ func GetArticle(id int) Article {
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
 	article.Artists = artistInfos
 
-	return article
+	src := ""
+	IDStr := strconv.FormatInt(int64(article.ID), 10)
+	if checkS3KeyExists(IDStr) {
+		src = "https://tamarock-local.s3-ap-northeast-1.amazonaws.com/thumb/" + IDStr + ".jpeg"
+	}
+	picture := Picture{
+		Src:   src,
+		Title: "thumbnail",
+	}
+	var pictures []Picture
+	pictures = append(pictures, picture)
+
+	responseArticleData := ResponseArticleData{
+		ID:       article.ID,
+		Pictures: pictures,
+		Title:    article.Title,
+		Text:     article.Text,
+		Category: article.Category,
+		Artists:  artistInfos,
+	}
+
+	return responseArticleData
 }
 
 // GetAdminArticle is 引数のIDに合致した記事を返す
