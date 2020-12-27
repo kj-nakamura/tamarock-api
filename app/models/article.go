@@ -193,73 +193,11 @@ func checkS3KeyExists(objectKey string) bool {
 
 	_, err := svc.HeadObject(input)
 	if err != nil {
-		// 全てのエラーを false として返すという強引な対応
 		return false
 	} else {
 		return true
 	}
 }
-
-// func GetImage() string {
-// 	sess := session.Must(session.NewSession(&aws.Config{
-// 		Credentials: credentials.NewStaticCredentials(config.Env.S3AK, config.Env.S3SK, ""),
-// 		Region:      aws.String("ap-northeast-1"),
-// 	}))
-
-// 	bucketName := config.Env.BucketName
-// 	objectKey := "thumb/55.jpeg"
-
-// 	// S3 clientを作成
-// 	svc := s3.New(sess)
-
-// 	obj, err := svc.GetObject(&s3.GetObjectInput{
-// 		Bucket: aws.String(bucketName),
-// 		Key:    aws.String(objectKey),
-// 	})
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	fmt.Println(obj.Body)
-// 	// 最初の10byteだけ読み込んで表示
-// 	// defer rc.Close()
-// 	// buf := make([]byte, 10)
-// 	// _, err = rc.Read(buf)
-// 	// if err != nil {
-// 	// 	log.Fatal(err)
-// 	// }
-// 	// log.Printf("%s", buf)
-// 	buf := new(bytes.Buffer)
-// 	buf.ReadFrom(obj.Body)
-// 	return buf.String()
-// }
-
-// func uploadImages(imageData string, dirName string) {
-// 	b64data := imageData[strings.IndexByte(imageData, ',')+1:]
-
-// 	dec, err := base64.StdEncoding.DecodeString(b64data)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	if _, err := os.Stat(dirName); os.IsNotExist(err) {
-// 		os.Mkdir(dirName, 0777)
-// 	} else {
-// 		panic(err)
-// 	}
-
-// 	f, err := os.Create(dirName + "/thumb.jpg")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	defer f.Close()
-
-// 	if _, err := f.Write(dec); err != nil {
-// 		panic(err)
-// 	}
-// 	if err := f.Sync(); err != nil {
-// 		panic(err)
-// 	}
-// }
 
 func DeleteArticle(id int) {
 	var article Article
