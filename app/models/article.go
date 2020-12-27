@@ -1,13 +1,25 @@
 package models
 
 import (
+	"api/config"
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
@@ -27,12 +39,18 @@ type Article struct {
 type RequestArticleData struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
 	Title     string         `json:"title"`
+	Pictures  []Picture      `json:"pictures"`
 	Text      string         `gorm:"text" json:"text"`
 	Category  int            `json:"category"`
 	ArtistIds []int          `json:"artist_ids"`
 	CreatedAt time.Time      `json:"createdat"`
 	UpdatedAt time.Time      `json:"updatedat"`
 	DeletedAt gorm.DeletedAt `json:"deletedat"`
+}
+
+type Picture struct {
+	Src   string `json:"src"`
+	Title string `json:"title"`
 }
 
 func migrateArticle() {
@@ -53,6 +71,13 @@ func CreateArticle(r *http.Request) Article {
 	if len(requestArticleData.ArtistIds) > 0 {
 		DbConnection.Where(requestArticleData.ArtistIds).Find(&artistInfos)
 	}
+
+	picture := Picture{
+		Src:   "55/thumb.jpg",
+		Title: "thumbnail",
+	}
+	var pictures []Picture
+	pictures = append(pictures, picture)
 
 	// 記事を保存
 	article := Article{
@@ -101,7 +126,80 @@ func UpdateArticle(r *http.Request, id int) Article {
 		fmt.Printf("update error: %s", result.Error)
 	}
 
+	err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(requestArticleData.ID), 10))
+	if err != nil {
+		log.Println(err)
+	}
+
 	return article
+}
+
+// s3に画像アップロード
+func UploadToS3(imageBase64 string, fileExtension string, filename string) error {
+	// 環境変数からS3Credential周りの設定を取得
+	bucketName := config.Env.BucketName
+
+	sess := session.Must(session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(config.Env.S3AK, config.Env.S3SK, ""),
+		Region:      aws.String("ap-northeast-1"),
+	}))
+
+	uploader := s3manager.NewUploader(sess)
+
+	b64data := imageBase64[strings.IndexByte(imageBase64, ',')+1:]
+	data, err := base64.StdEncoding.DecodeString(b64data)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	wb := new(bytes.Buffer)
+	wb.Write(data)
+	fmt.Println(bucketName)
+
+	res, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket:      aws.String(bucketName),
+		Key:         aws.String("thumb/" + filename + "." + fileExtension),
+		Body:        wb,
+		ContentType: aws.String("image/" + fileExtension),
+	})
+
+	if err != nil {
+		fmt.Println(res)
+		if err, ok := err.(awserr.Error); ok && err.Code() == request.CanceledErrorCode {
+			log.Fatalln(err)
+		} else {
+			return fmt.Errorf("Upload Failed %d", 400)
+		}
+	}
+
+	return nil
+}
+
+func uploadImages(imageData string, dirName string) {
+	b64data := imageData[strings.IndexByte(imageData, ',')+1:]
+
+	dec, err := base64.StdEncoding.DecodeString(b64data)
+	if err != nil {
+		panic(err)
+	}
+
+	if _, err := os.Stat(dirName); os.IsNotExist(err) {
+		os.Mkdir(dirName, 0777)
+	} else {
+		panic(err)
+	}
+
+	f, err := os.Create(dirName + "/thumb.jpg")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	if _, err := f.Write(dec); err != nil {
+		panic(err)
+	}
+	if err := f.Sync(); err != nil {
+		panic(err)
+	}
 }
 
 func DeleteArticle(id int) {
@@ -137,6 +235,13 @@ func GetAdminArticle(id int) RequestArticleData {
 	DbConnection.First(&article, id)
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
 
+	picture := Picture{
+		Src:   "http://tamarock-api/55/thumb.jpg",
+		Title: "thumbnail",
+	}
+	var pictures []Picture
+	pictures = append(pictures, picture)
+
 	// レスポンス用データを形成
 	var artistData []int
 	for _, artistInfo := range artistInfos {
@@ -144,6 +249,7 @@ func GetAdminArticle(id int) RequestArticleData {
 	}
 	requestArticleData := RequestArticleData{
 		ID:        article.ID,
+		Pictures:  pictures,
 		Title:     article.Title,
 		Text:      article.Text,
 		Category:  article.Category,

@@ -14,7 +14,7 @@ import (
 )
 
 type EnvValue struct {
-	Env           string `required:"true" split_words:"true" default:"dev"`
+	Env           string `required:"true" default:"dev"`
 	YoutubeApiKey string `split_words:"true"`
 	ApiKey        string `split_words:"true"`
 	ApiSecret     string `split_words:"true"`
@@ -22,6 +22,9 @@ type EnvValue struct {
 	DbHost        string `split_words:"true" default:"mysql"`
 	DbUserName    string `required:"true" split_words:"true"`
 	DbPassword    string `split_words:"true"`
+	S3AK          string
+	S3SK          string
+	BucketName    string `required:"true" split_words:"true"`
 }
 
 type ConfigValue struct {
