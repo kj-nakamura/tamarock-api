@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
@@ -126,15 +126,18 @@ func UpdateArticle(r *http.Request, id int) Article {
 		fmt.Printf("update error: %s", result.Error)
 	}
 
-	err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(requestArticleData.ID), 10))
-	if err != nil {
-		log.Println(err)
+	if requestArticleData.Pictures[0].Src != "" {
+		fmt.Println("upload")
+		err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(requestArticleData.ID), 10))
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	return article
 }
 
-// s3に画像アップロード
+// UploadToS3 is s3に画像アップロード
 func UploadToS3(imageBase64 string, fileExtension string, filename string) error {
 	// 環境変数からS3Credential周りの設定を取得
 	bucketName := config.Env.BucketName
@@ -153,7 +156,6 @@ func UploadToS3(imageBase64 string, fileExtension string, filename string) error
 	}
 	wb := new(bytes.Buffer)
 	wb.Write(data)
-	fmt.Println(bucketName)
 
 	res, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket:      aws.String(bucketName),
@@ -174,33 +176,90 @@ func UploadToS3(imageBase64 string, fileExtension string, filename string) error
 	return nil
 }
 
-func uploadImages(imageData string, dirName string) {
-	b64data := imageData[strings.IndexByte(imageData, ',')+1:]
+func checkS3KeyExists(objectKey string) bool {
+	sess := session.Must(session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(config.Env.S3AK, config.Env.S3SK, ""),
+		Region:      aws.String("ap-northeast-1"),
+	}))
 
-	dec, err := base64.StdEncoding.DecodeString(b64data)
-	if err != nil {
-		panic(err)
+	bucketName := config.Env.BucketName
+
+	// S3 clientを作成
+	svc := s3.New(sess)
+	input := &s3.HeadObjectInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String("thumb/" + objectKey + ".jpeg"),
 	}
 
-	if _, err := os.Stat(dirName); os.IsNotExist(err) {
-		os.Mkdir(dirName, 0777)
+	_, err := svc.HeadObject(input)
+	if err != nil {
+		// 全てのエラーを false として返すという強引な対応
+		return false
 	} else {
-		panic(err)
-	}
-
-	f, err := os.Create(dirName + "/thumb.jpg")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	if _, err := f.Write(dec); err != nil {
-		panic(err)
-	}
-	if err := f.Sync(); err != nil {
-		panic(err)
+		return true
 	}
 }
+
+// func GetImage() string {
+// 	sess := session.Must(session.NewSession(&aws.Config{
+// 		Credentials: credentials.NewStaticCredentials(config.Env.S3AK, config.Env.S3SK, ""),
+// 		Region:      aws.String("ap-northeast-1"),
+// 	}))
+
+// 	bucketName := config.Env.BucketName
+// 	objectKey := "thumb/55.jpeg"
+
+// 	// S3 clientを作成
+// 	svc := s3.New(sess)
+
+// 	obj, err := svc.GetObject(&s3.GetObjectInput{
+// 		Bucket: aws.String(bucketName),
+// 		Key:    aws.String(objectKey),
+// 	})
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	fmt.Println(obj.Body)
+// 	// 最初の10byteだけ読み込んで表示
+// 	// defer rc.Close()
+// 	// buf := make([]byte, 10)
+// 	// _, err = rc.Read(buf)
+// 	// if err != nil {
+// 	// 	log.Fatal(err)
+// 	// }
+// 	// log.Printf("%s", buf)
+// 	buf := new(bytes.Buffer)
+// 	buf.ReadFrom(obj.Body)
+// 	return buf.String()
+// }
+
+// func uploadImages(imageData string, dirName string) {
+// 	b64data := imageData[strings.IndexByte(imageData, ',')+1:]
+
+// 	dec, err := base64.StdEncoding.DecodeString(b64data)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	if _, err := os.Stat(dirName); os.IsNotExist(err) {
+// 		os.Mkdir(dirName, 0777)
+// 	} else {
+// 		panic(err)
+// 	}
+
+// 	f, err := os.Create(dirName + "/thumb.jpg")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	defer f.Close()
+
+// 	if _, err := f.Write(dec); err != nil {
+// 		panic(err)
+// 	}
+// 	if err := f.Sync(); err != nil {
+// 		panic(err)
+// 	}
+// }
 
 func DeleteArticle(id int) {
 	var article Article
@@ -235,8 +294,13 @@ func GetAdminArticle(id int) RequestArticleData {
 	DbConnection.First(&article, id)
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
 
+	src := "https://www.pakutaso.com/shared/img/thumb/penfan_KP_2783_TP_V.jpg"
+	IDStr := strconv.FormatInt(int64(article.ID), 10)
+	if checkS3KeyExists(IDStr) {
+		src = "https://tamarock-local.s3-ap-northeast-1.amazonaws.com/thumb/" + IDStr + ".jpeg"
+	}
 	picture := Picture{
-		Src:   "http://tamarock-api/55/thumb.jpg",
+		Src:   src,
 		Title: "thumbnail",
 	}
 	var pictures []Picture
