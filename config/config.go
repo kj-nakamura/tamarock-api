@@ -40,6 +40,9 @@ type SecretValue struct {
 	API_SECRET      string
 	DB_PASSWORD     string
 	DB_HOST         string
+	S3AK            string
+	S3SK            string
+	BUCKET_NAME     string
 }
 
 var Env EnvValue
@@ -60,6 +63,9 @@ func init() {
 		Env.ApiSecret = secretValue.API_SECRET
 		Env.DbPassword = secretValue.DB_PASSWORD
 		Env.DbHost = secretValue.DB_HOST
+		Env.S3AK = secretValue.S3AK
+		Env.S3SK = secretValue.S3SK
+		Env.BucketName = secretValue.BUCKET_NAME
 	}
 
 	Config.LogFile = "tamarock.log"
