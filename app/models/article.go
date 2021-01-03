@@ -156,6 +156,7 @@ func UpdateArticle(r *http.Request, id int) Article {
 func UploadToS3(imageBase64 string, fileExtension string, filename string) error {
 	// 環境変数からS3Credential周りの設定を取得
 	bucketName := config.Env.BucketName
+	log.Fatalln(config.Env)
 	sess := session.Must(session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(config.Env.S3AK, config.Env.S3SK, ""),
 		Region:      aws.String("ap-northeast-1"),
