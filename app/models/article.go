@@ -70,6 +70,7 @@ func migrateArticle() {
 }
 
 const defaultPicture string = "https://www.pakutaso.com/shared/img/thumb/penfan_KP_2783_TP_V.jpg"
+const s3ImageURL string = "https://" + config.Env.BucketName + ".s3-ap-northeast-1.amazonaws.com/thumb/"
 
 // CreateArticle is 記事を作成する
 func CreateArticle(r *http.Request) Article {
@@ -238,7 +239,7 @@ func GetArticle(id int) ResponseArticleData {
 	src := ""
 	IDStr := strconv.FormatInt(int64(article.ID), 10)
 	if checkS3KeyExists(IDStr) {
-		src = "https://tamarock-local.s3-ap-northeast-1.amazonaws.com/thumb/" + IDStr + ".jpeg"
+		src = s3ImageURL + IDStr + ".jpeg"
 	}
 	picture := Picture{
 		Src:   src,
@@ -270,7 +271,7 @@ func GetAdminArticle(id int) RequestArticleData {
 	src := defaultPicture
 	IDStr := strconv.FormatInt(int64(article.ID), 10)
 	if checkS3KeyExists(IDStr) {
-		src = "https://tamarock-local.s3-ap-northeast-1.amazonaws.com/thumb/" + IDStr + ".jpeg"
+		src = s3ImageURL + IDStr + ".jpeg"
 	}
 	picture := Picture{
 		Src:   src,
