@@ -69,6 +69,8 @@ func migrateArticle() {
 	DbConnection.AutoMigrate(&Article{})
 }
 
+const defaultPicture string = "https://www.pakutaso.com/shared/img/thumb/penfan_KP_2783_TP_V.jpg"
+
 // CreateArticle is 記事を作成する
 func CreateArticle(r *http.Request) Article {
 	// リクエストをjsonに変える
@@ -84,13 +86,6 @@ func CreateArticle(r *http.Request) Article {
 		DbConnection.Where(requestArticleData.ArtistIds).Find(&artistInfos)
 	}
 
-	picture := Picture{
-		Src:   "55/thumb.jpg",
-		Title: "thumbnail",
-	}
-	var pictures []Picture
-	pictures = append(pictures, picture)
-
 	// 記事を保存
 	article := Article{
 		ID:       requestArticleData.ID,
@@ -102,6 +97,13 @@ func CreateArticle(r *http.Request) Article {
 	result := DbConnection.Create(&article)
 	if result.Error != nil {
 		fmt.Println(result.Error)
+	}
+
+	if requestArticleData.Pictures != nil && requestArticleData.Pictures[0].Src != "" {
+		err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	return article
@@ -133,16 +135,17 @@ func UpdateArticle(r *http.Request, id int) Article {
 		Category: requestArticleData.Category,
 		Artists:  artistInfos,
 	}
+
 	result := DbConnection.Updates(articleData)
 	if result.Error != nil {
-		fmt.Printf("update error: %s", result.Error)
+		fmt.Printf("update error: %v", result.Error)
 	}
 
-	if requestArticleData.Pictures[0].Src != "" {
-		fmt.Println("upload")
-		err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(requestArticleData.ID), 10))
+	// 写真アップロード
+	if requestArticleData.Pictures != nil && requestArticleData.Pictures[0].Src != defaultPicture {
+		err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
 		if err != nil {
-			log.Println(err)
+			log.Printf("error after upload: %v", err)
 		}
 	}
 
@@ -153,7 +156,6 @@ func UpdateArticle(r *http.Request, id int) Article {
 func UploadToS3(imageBase64 string, fileExtension string, filename string) error {
 	// 環境変数からS3Credential周りの設定を取得
 	bucketName := config.Env.BucketName
-
 	sess := session.Must(session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(config.Env.S3AK, config.Env.S3SK, ""),
 		Region:      aws.String("ap-northeast-1"),
@@ -164,7 +166,7 @@ func UploadToS3(imageBase64 string, fileExtension string, filename string) error
 	b64data := imageBase64[strings.IndexByte(imageBase64, ',')+1:]
 	data, err := base64.StdEncoding.DecodeString(b64data)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("upload decode error: %v", err)
 	}
 	wb := new(bytes.Buffer)
 	wb.Write(data)
@@ -177,9 +179,9 @@ func UploadToS3(imageBase64 string, fileExtension string, filename string) error
 	})
 
 	if err != nil {
-		fmt.Println(res)
+		fmt.Sprintf("upload error: %v", res)
 		if err, ok := err.(awserr.Error); ok && err.Code() == request.CanceledErrorCode {
-			log.Fatalln(err)
+			log.Fatalf("upload answer error: %v", err)
 		} else {
 			return fmt.Errorf("Upload Failed %d", 400)
 		}
@@ -265,7 +267,7 @@ func GetAdminArticle(id int) RequestArticleData {
 	DbConnection.First(&article, id)
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
 
-	src := "https://www.pakutaso.com/shared/img/thumb/penfan_KP_2783_TP_V.jpg"
+	src := defaultPicture
 	IDStr := strconv.FormatInt(int64(article.ID), 10)
 	if checkS3KeyExists(IDStr) {
 		src = "https://tamarock-local.s3-ap-northeast-1.amazonaws.com/thumb/" + IDStr + ".jpeg"
