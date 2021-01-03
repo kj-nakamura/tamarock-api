@@ -70,7 +70,8 @@ func migrateArticle() {
 }
 
 const defaultPicture string = "https://www.pakutaso.com/shared/img/thumb/penfan_KP_2783_TP_V.jpg"
-const s3ImageURL string = "https://" + config.Env.BucketName + ".s3-ap-northeast-1.amazonaws.com/thumb/"
+
+var s3ImageURL string = "https://" + config.Env.BucketName + ".s3-ap-northeast-1.amazonaws.com/thumb/"
 
 // CreateArticle is 記事を作成する
 func CreateArticle(r *http.Request) Article {
