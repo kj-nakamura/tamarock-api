@@ -24,7 +24,7 @@ type EnvValue struct {
 	DbPassword    string `split_words:"true"`
 	S3AK          string
 	S3SK          string
-	BucketName    string `required:"true" split_words:"true"`
+	BucketName    string `split_words:"true"`
 }
 
 type ConfigValue struct {
