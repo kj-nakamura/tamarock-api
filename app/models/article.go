@@ -111,7 +111,7 @@ func CreateArticle(r *http.Request) Article {
 	return article
 }
 
-func UpdateArticle(r *http.Request, id int) Article {
+func UpdateArticle(r *http.Request, id int) RequestArticleData {
 	// リクエストをjsonに変える
 	var requestArticleData RequestArticleData
 	dec := json.NewDecoder(r.Body)
@@ -123,11 +123,18 @@ func UpdateArticle(r *http.Request, id int) Article {
 	var article Article
 	var artistInfos []ArtistInfo
 	DbConnection.First(&article, id)
+
+	// 一度、全関連アーティストを削除
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
 	DbConnection.Model(&article).Association("Artists").Delete(artistInfos)
 
 	// リクエストからアーティスト情報を取得
-	DbConnection.Where(requestArticleData.ArtistIds).Find(&artistInfos)
+	if len(requestArticleData.ArtistIds) > 0 {
+		DbConnection.Where(requestArticleData.ArtistIds).Find(&artistInfos)
+	} else {
+		var emptyArtistInfo []ArtistInfo
+		artistInfos = emptyArtistInfo
+	}
 
 	// 記事を保存
 	articleData := Article{
@@ -143,15 +150,17 @@ func UpdateArticle(r *http.Request, id int) Article {
 		fmt.Printf("update error: %v", result.Error)
 	}
 
-	// 写真アップロード
-	if requestArticleData.Pictures != nil && requestArticleData.Pictures[0].Src != defaultPicture {
+	// 写真アップロード 画像なし、デフォルト画像、S3URLの場合はアップロードしない。(base64のみ)
+	if requestArticleData.Pictures != nil &&
+		requestArticleData.Pictures[0].Src != defaultPicture &&
+		strings.Contains(requestArticleData.Pictures[0].Src, s3ImageURL) == false {
 		err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
 		if err != nil {
 			log.Printf("error after upload: %v", err)
 		}
 	}
 
-	return article
+	return GetAdminArticle(int(article.ID))
 }
 
 // UploadToS3 is s3に画像アップロード
@@ -192,6 +201,7 @@ func UploadToS3(imageBase64 string, fileExtension string, filename string) error
 	return nil
 }
 
+// checkS3KeyExists is 画像がS3に存在するかチェックする
 func checkS3KeyExists(objectKey string) bool {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(config.Env.S3AK, config.Env.S3SK, ""),
@@ -210,9 +220,8 @@ func checkS3KeyExists(objectKey string) bool {
 	_, err := svc.HeadObject(input)
 	if err != nil {
 		return false
-	} else {
-		return true
 	}
+	return true
 }
 
 func DeleteArticle(id int) {
