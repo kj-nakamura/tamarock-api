@@ -36,6 +36,7 @@ type Article struct {
 	DeletedAt gorm.DeletedAt `json:"deletedat"`
 }
 
+// ResponseArticleData is frontに返す形
 type ResponseArticleData struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
 	Title     string         `json:"title"`
@@ -48,6 +49,7 @@ type ResponseArticleData struct {
 	DeletedAt gorm.DeletedAt `json:"deletedat"`
 }
 
+// RequestArticleData is フロントから受け取る形
 type RequestArticleData struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
 	Title     string         `json:"title"`
@@ -60,17 +62,19 @@ type RequestArticleData struct {
 	DeletedAt gorm.DeletedAt `json:"deletedat"`
 }
 
+// Picture is 画像の受け取りと送信
 type Picture struct {
 	Src   string `json:"src"`
 	Title string `json:"title"`
 }
 
 func migrateArticle() {
-	DbConnection.AutoMigrate(&Article{})
+	// DbConnection.AutoMigrate(&Article{})
 }
 
 const defaultPicture string = "https://www.pakutaso.com/shared/img/thumb/penfan_KP_2783_TP_V.jpg"
 
+// S3の画像URL
 var s3ImageURL string = "https://" + config.Env.BucketName + ".s3-ap-northeast-1.amazonaws.com/thumb/"
 
 // CreateArticle is 記事を作成する
@@ -224,6 +228,7 @@ func checkS3KeyExists(objectKey string) bool {
 	return true
 }
 
+// DeleteArticle is 記事を1つ削除
 func DeleteArticle(id int) {
 	var article Article
 
@@ -244,7 +249,6 @@ func GetArticle(id int) ResponseArticleData {
 
 	// アーティスト情報取得
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
-	article.Artists = artistInfos
 
 	src := ""
 	IDStr := strconv.FormatInt(int64(article.ID), 10)
