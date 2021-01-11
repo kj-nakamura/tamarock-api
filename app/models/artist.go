@@ -19,6 +19,7 @@ type ArtistInfo struct {
 	Name      string         `gorm:"not null" json:"name"`
 	Url       string         `json:"url"`
 	TwitterId string         `json:"twitter_id"`
+	Articles  []Article      `gorm:"many2many:article_artist_infos;" json:"articles"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at"`
@@ -72,7 +73,7 @@ func DeleteArtistInfo(id int) {
 	DbConnection.Delete(&artistInfo, id)
 }
 
-// GetArtist is 引数のIDに合致したアーティストを返す
+// GetArtistInfo is 引数のIDに合致したアーティストを返す
 func GetArtistInfo(ID int) ArtistInfo {
 	var artistInfo ArtistInfo
 	DbConnection.First(&artistInfo, ID)
@@ -80,16 +81,28 @@ func GetArtistInfo(ID int) ArtistInfo {
 	return artistInfo
 }
 
-// GetArtistFromArtistID is artist_idに合致したアーティストを返す
+// GetArtistInfoFromArtistID is artist_idに合致したアーティストを返す
 func GetArtistInfoFromArtistID(artistID string) ArtistInfo {
 	var artistInfo ArtistInfo
+	var articles []Article
 
 	DbConnection.Where("artist_id = ?", artistID).First(&artistInfo)
+	// 記事情報取得
+	DbConnection.Debug().Model(&artistInfo).Association("Articles").Find(&articles)
 
-	return artistInfo
+	responseArtistInfo := ArtistInfo{
+		ID:        artistInfo.ID,
+		ArtistId:  artistInfo.ArtistId,
+		Name:      artistInfo.Name,
+		Url:       artistInfo.Url,
+		TwitterId: artistInfo.TwitterId,
+		Articles:  articles,
+	}
+
+	return responseArtistInfo
 }
 
-// GetArtists is アーティスト情報を複数返す
+// GetArtistInfos is アーティスト情報を複数返す
 func GetArtistInfos(start int, end int, order string, sort string, query string) []ArtistInfo {
 	var artistInfos []ArtistInfo
 
@@ -111,7 +124,7 @@ func GetArtistInfos(start int, end int, order string, sort string, query string)
 	return artistInfos
 }
 
-// 全記事数を取得
+// CountArtistInfos is 全記事数を取得
 func CountArtistInfos(query string) int {
 	var artistInfos []ArtistInfo
 	DbConnection.Where("name LIKE?", "%"+query+"%").Find(&artistInfos)
