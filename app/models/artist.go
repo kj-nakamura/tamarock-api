@@ -29,6 +29,7 @@ func migrateArtistInfo() {
 	DbConnection.AutoMigrate(&ArtistInfo{})
 }
 
+// CreateArtistInfo is アーティスト作成
 func CreateArtistInfo(r *http.Request) ArtistInfo {
 	var artistInfo ArtistInfo
 	dec := json.NewDecoder(r.Body)
@@ -45,6 +46,7 @@ func CreateArtistInfo(r *http.Request) ArtistInfo {
 	return artistInfo
 }
 
+// UpdateArtistInfo is アーティスト更新
 func UpdateArtistInfo(r *http.Request, id int) ArtistInfo {
 	var artistInfo ArtistInfo
 
@@ -67,6 +69,7 @@ func UpdateArtistInfo(r *http.Request, id int) ArtistInfo {
 	return artistInfo
 }
 
+// DeleteArtistInfo is アーティスト情報削除
 func DeleteArtistInfo(id int) {
 	var artistInfo ArtistInfo
 

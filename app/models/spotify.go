@@ -28,6 +28,7 @@ func NewSpotifyArtist(spotifyArtistInfo *spotify.FullArtist, youtubeIds []string
 	}
 }
 
+// GetClient is クライアント取得
 func GetClient() spotify.Client {
 	config := &clientcredentials.Config{
 		ClientID:     config.Env.ApiKey,
@@ -44,6 +45,7 @@ func GetClient() spotify.Client {
 	return client
 }
 
+// GetSpotifyArtist is spotifyからアーティスト情報取得
 func GetSpotifyArtist(artistID string) *SpotifyArtistInfo {
 	client := GetClient()
 	result, err := client.GetArtist(spotify.ID(artistID)) // artistID

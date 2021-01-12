@@ -44,6 +44,7 @@ func migrateCategory() {
 	DbConnection.AutoMigrate(&Category{})
 }
 
+// CreateCategory is カテゴリ作成
 func CreateCategory(r *http.Request) Category {
 	// リクエストをjsonに変える
 	var category Category
@@ -68,6 +69,7 @@ func CreateCategory(r *http.Request) Category {
 	return category
 }
 
+// UpdateCategory is カテゴリ更新
 func UpdateCategory(r *http.Request, id int) Category {
 	// リクエストをjsonに変える
 	var updateCategoryData UpdateCategoryData
@@ -86,6 +88,7 @@ func UpdateCategory(r *http.Request, id int) Category {
 	return category
 }
 
+// DeleteCategory is カテゴリ削除
 func DeleteCategory(id int) {
 	var category Category
 	DbConnection.First(&category, id)

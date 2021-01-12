@@ -115,6 +115,7 @@ func CreateArticle(r *http.Request) Article {
 	return article
 }
 
+// UpdateArticle is 記事更新
 func UpdateArticle(r *http.Request, id int) RequestArticleData {
 	// リクエストをjsonに変える
 	var requestArticleData RequestArticleData
