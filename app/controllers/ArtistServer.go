@@ -52,7 +52,12 @@ func getArtistInfoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	artistInfo := models.GetArtistInfoFromArtistID(artistID)
+	start, _ := strconv.Atoi(r.URL.Query().Get("_start"))
+	end, _ := strconv.Atoi(r.URL.Query().Get("_end"))
+	order := r.URL.Query().Get("_order")
+	sort := r.URL.Query().Get("_sort")
+	query := r.URL.Query().Get("q")
+	artistInfo := models.GetArtistInfoFromArtistID(artistID, start, end, order, sort, query)
 
 	// json出力
 	responseJSON(w, artistInfo)

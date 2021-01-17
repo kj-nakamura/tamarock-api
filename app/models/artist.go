@@ -85,13 +85,26 @@ func GetArtistInfo(ID int) ArtistInfo {
 }
 
 // GetArtistInfoFromArtistID is artist_idに合致したアーティストを返す
-func GetArtistInfoFromArtistID(artistID string) ArtistInfo {
+func GetArtistInfoFromArtistID(artistID string, start int, end int, order string, sort string, query string) ArtistInfo {
 	var artistInfo ArtistInfo
 	var articles []Article
 
 	DbConnection.Where("artist_id = ?", artistID).First(&artistInfo)
 	// 記事情報取得
-	DbConnection.Debug().Model(&artistInfo).Association("Articles").Find(&articles)
+	if end > 0 {
+		sortColumn := sort
+		if sort == "" {
+			sortColumn = "id"
+		}
+		createdOrder := sortColumn + " asc"
+		if order == "DESC" {
+			createdOrder = sortColumn + " desc"
+		}
+		limit := end - start
+		DbConnection.Model(&artistInfo).Where("title LIKE?", "%"+query+"%").Order(createdOrder).Offset(start).Limit(limit).Association("Articles").Find(&articles)
+	} else {
+		DbConnection.Model(&artistInfo).Association("Articles").Find(&articles)
+	}
 
 	responseArtistInfo := ArtistInfo{
 		ID:        artistInfo.ID,
