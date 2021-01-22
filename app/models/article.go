@@ -75,8 +75,8 @@ func migrateArticle() {
 
 const defaultPicture string = "https://www.pakutaso.com/shared/img/thumb/penfan_KP_2783_TP_V.jpg"
 
-// S3の画像URL
-var s3ImageURL string = "https://" + config.Env.BucketName + ".s3-ap-northeast-1.amazonaws.com/thumb/"
+// S3の画像URL(CloudFront利用)
+var imageURL string = "https://static-prod.tamarock.jp/thumb/"
 
 // CreateArticle is 記事を作成する
 func CreateArticle(r *http.Request) Article {
@@ -164,15 +164,19 @@ func UpdateArticle(r *http.Request, id int) RequestArticleData {
 	}
 
 	// 写真アップロード 画像なし、デフォルト画像、S3URLの場合はアップロードしない。(base64のみ)
+	// フォームに画像がある&デフォルトの画像ではない
 	if requestArticleData.Pictures != nil && requestArticleData.Pictures[0].Src != defaultPicture {
+		// 本番
 		if config.Env.Env == "prod" {
-			if strings.Contains(requestArticleData.Pictures[0].Src, s3ImageURL) == false {
+			// フォームデータに現在の画像URLがないこと(アップロードしたbase64であること)
+			if strings.Contains(requestArticleData.Pictures[0].Src, imageURL) == false {
 				err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
 				if err != nil {
 					log.Printf("s3 upload error: %v", err)
 				}
 			}
 		} else {
+			// ローカル
 			err := uploadImageToLocal(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
 			if err != nil {
 				log.Printf("local upload error: %v", err)
@@ -294,7 +298,7 @@ func GetArticle(id int) ResponseArticleData {
 	IDStr := strconv.FormatInt(int64(article.ID), 10)
 	if config.Env.Env == "prod" {
 		if checkS3KeyExists(IDStr) {
-			src = s3ImageURL + IDStr + ".jpeg"
+			src = imageURL + IDStr + ".jpeg"
 		}
 	} else {
 		filePath := "http://tamarock-api:5000/static/" + IDStr + "/thumb.jpeg"
@@ -333,10 +337,12 @@ func GetAdminArticle(id int) RequestArticleData {
 	src := defaultPicture
 	IDStr := strconv.FormatInt(int64(article.ID), 10)
 	if config.Env.Env == "prod" {
+		// 本番
 		if checkS3KeyExists(IDStr) {
-			src = s3ImageURL + IDStr + ".jpeg"
+			src = imageURL + IDStr + ".jpeg"
 		}
 	} else {
+		// ローカル
 		filePath := "http://localhost:5000/static/" + IDStr + "/thumb.jpeg"
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
 			src = filePath
