@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -106,9 +107,16 @@ func CreateArticle(r *http.Request) Article {
 	}
 
 	if requestArticleData.Pictures != nil && requestArticleData.Pictures[0].Src != "" {
-		err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
-		if err != nil {
-			log.Println(err)
+		if config.Env.Env == "prod" {
+			err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			err := uploadImageToLocal(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
+			if err != nil {
+				log.Printf("local upload error: %v", err)
+			}
 		}
 	}
 
@@ -156,16 +164,47 @@ func UpdateArticle(r *http.Request, id int) RequestArticleData {
 	}
 
 	// 写真アップロード 画像なし、デフォルト画像、S3URLの場合はアップロードしない。(base64のみ)
-	if requestArticleData.Pictures != nil &&
-		requestArticleData.Pictures[0].Src != defaultPicture &&
-		strings.Contains(requestArticleData.Pictures[0].Src, s3ImageURL) == false {
-		err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
-		if err != nil {
-			log.Printf("error after upload: %v", err)
+	if requestArticleData.Pictures != nil && requestArticleData.Pictures[0].Src != defaultPicture {
+		if config.Env.Env == "prod" {
+			if strings.Contains(requestArticleData.Pictures[0].Src, s3ImageURL) == false {
+				err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
+				if err != nil {
+					log.Printf("s3 upload error: %v", err)
+				}
+			}
+		} else {
+			err := uploadImageToLocal(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
+			if err != nil {
+				log.Printf("local upload error: %v", err)
+			}
 		}
 	}
 
 	return GetAdminArticle(int(article.ID))
+}
+
+// uploadImageToLocal is ローカルに画像をアップロードする
+func uploadImageToLocal(imageBase64 string, fileExtension string, fileDir string) error {
+	b64data := imageBase64[strings.IndexByte(imageBase64, ',')+1:]
+	data := base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64data))
+
+	filePath := "./static/" + fileDir
+	// ディレクトリがなければ作成
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		os.Mkdir(filePath, 0777)
+	}
+	file, err := os.Create(filePath + "/thumb." + fileExtension)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(file, data)
+	if err != nil {
+		return err
+	}
+	file.Close()
+
+	return nil
 }
 
 // UploadToS3 is s3に画像アップロード
@@ -253,9 +292,17 @@ func GetArticle(id int) ResponseArticleData {
 
 	src := ""
 	IDStr := strconv.FormatInt(int64(article.ID), 10)
-	if checkS3KeyExists(IDStr) {
-		src = s3ImageURL + IDStr + ".jpeg"
+	if config.Env.Env == "prod" {
+		if checkS3KeyExists(IDStr) {
+			src = s3ImageURL + IDStr + ".jpeg"
+		}
+	} else {
+		filePath := "http://tamarock-api:5000/static/" + IDStr + "/thumb.jpeg"
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			src = filePath
+		}
 	}
+
 	picture := Picture{
 		Src:   src,
 		Title: "thumbnail",
@@ -285,9 +332,17 @@ func GetAdminArticle(id int) RequestArticleData {
 
 	src := defaultPicture
 	IDStr := strconv.FormatInt(int64(article.ID), 10)
-	if checkS3KeyExists(IDStr) {
-		src = s3ImageURL + IDStr + ".jpeg"
+	if config.Env.Env == "prod" {
+		if checkS3KeyExists(IDStr) {
+			src = s3ImageURL + IDStr + ".jpeg"
+		}
+	} else {
+		filePath := "http://localhost:5000/static/" + IDStr + "/thumb.jpeg"
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			src = filePath
+		}
 	}
+
 	picture := Picture{
 		Src:   src,
 		Title: "thumbnail",

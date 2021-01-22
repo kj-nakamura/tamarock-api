@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -141,6 +142,13 @@ func listenCtrl(network string, address string, c syscall.RawConn) error {
 
 func StartWebServer() error {
 	r := mux.NewRouter()
+
+	// image
+	var dir string
+	flag.StringVar(&dir, "dir", "./static", "the directory to serve files from. Defaults to the current dir")
+	flag.Parse()
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(dir))))
+
 	// web
 	// health check
 	r.HandleFunc("/api/health-check", healthCheckHandler).Methods("GET")
