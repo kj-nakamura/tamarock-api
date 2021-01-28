@@ -301,8 +301,8 @@ func GetArticle(id int) ResponseArticleData {
 			src = imageURL + IDStr + ".jpeg"
 		}
 	} else {
-		filePath := "http://tamarock-api:5000/static/" + IDStr + "/thumb.jpeg"
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		filePath := "../../static/" + IDStr + "/thumb.jpeg"
+		if _, err := os.Stat(filePath); !os.IsNotExist(err) {
 			src = filePath
 		}
 	}
