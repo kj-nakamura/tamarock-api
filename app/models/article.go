@@ -70,7 +70,7 @@ type Picture struct {
 }
 
 func migrateArticle() {
-	// DbConnection.AutoMigrate(&Article{})
+	DbConnection.AutoMigrate(&Article{})
 }
 
 const defaultPicture string = "https://www.pakutaso.com/shared/img/thumb/penfan_KP_2783_TP_V.jpg"
