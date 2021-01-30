@@ -194,6 +194,10 @@ func uploadImageToLocal(imageBase64 string, fileExtension string, fileDir string
 
 	filePath := "./static/" + fileDir
 	// ディレクトリがなければ作成
+	if _, err := os.Stat("./static"); os.IsNotExist(err) {
+		os.Mkdir("static", 0777)
+	}
+
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		os.Mkdir(filePath, 0777)
 	}
