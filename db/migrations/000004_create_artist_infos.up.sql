@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS artist_infos(
 	id serial PRIMARY KEY,
-	artist_id int,
+	artist_id VARCHAR (50),
 	name VARCHAR (255) UNIQUE NOT NULL,
 	url VARCHAR (255),
 	twitter_id VARCHAR (255),
