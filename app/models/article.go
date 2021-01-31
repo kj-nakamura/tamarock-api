@@ -70,7 +70,7 @@ type Picture struct {
 }
 
 func migrateArticle() {
-	// DbConnection.AutoMigrate(&Article{})
+	DbConnection.AutoMigrate(&Article{})
 }
 
 const defaultPicture string = "https://www.pakutaso.com/shared/img/thumb/penfan_KP_2783_TP_V.jpg"
@@ -194,6 +194,10 @@ func uploadImageToLocal(imageBase64 string, fileExtension string, fileDir string
 
 	filePath := "./static/" + fileDir
 	// ディレクトリがなければ作成
+	if _, err := os.Stat("./static"); os.IsNotExist(err) {
+		os.Mkdir("static", 0777)
+	}
+
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		os.Mkdir(filePath, 0777)
 	}
