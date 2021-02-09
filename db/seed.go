@@ -183,24 +183,24 @@ func articleSeed(db *gorm.DB) {
 
 func artistInfoSeed(db *gorm.DB) {
 	// ニュース1〜ニュース10まで
-	for _, artistInfoData := range artistInfoDatas {
-		artistInfo := models.ArtistInfo{
-			ArtistId:  artistInfoData.ArtistId,
-			Name:      artistInfoData.Name,
-			Url:       artistInfoData.Url,
-			TwitterId: artistInfoData.TwitterId,
+	for _, artistData := range artistDatas {
+		artist := models.ArtistInfo{
+			ArtistId:  artistData.ArtistId,
+			Name:      artistData.Name,
+			Url:       artistData.Url,
+			TwitterId: artistData.TwitterId,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
-		if err := db.Create(&artistInfo).Error; err != nil {
+		if err := db.Create(&artist).Error; err != nil {
 			fmt.Printf("%+v\n", err)
 			return
 		}
 	}
-	fmt.Println("ArtistInfo seed seccessful!!")
+	fmt.Println("Artist seed seccessful!!")
 }
 
-var artistInfoDatas = []models.ArtistInfo{
+var artistDatas = []models.ArtistInfo{
 	{
 		ArtistId:  "0zEbGW70TQHSOf4Ip1oeVn",
 		Name:      "ACIDMAN",
