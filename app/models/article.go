@@ -12,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -189,7 +190,11 @@ func UpdateArticle(r *http.Request, id int) RequestArticleData {
 
 // uploadImageToLocal is ローカルに画像をアップロードする
 func uploadImageToLocal(imageBase64 string, fileExtension string, fileDir string) error {
+	if !strings.Contains(imageBase64, "data:") {
+		return fmt.Errorf("not picture")
+	}
 	b64data := imageBase64[strings.IndexByte(imageBase64, ',')+1:]
+
 	data := base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64data))
 
 	filePath := "./static/" + fileDir
@@ -330,6 +335,22 @@ func GetArticle(id int) ResponseArticleData {
 	return responseArticleData
 }
 
+func fileExists(filename string) bool {
+    _, err := os.Stat(filename)
+
+    if pathError, ok := err.(*os.PathError); ok {
+        if pathError.Err == syscall.ENOTDIR {
+            return false
+        }
+    }
+
+    if os.IsNotExist(err) {
+        return false
+    }
+
+    return true
+}
+
 // GetAdminArticle is 引数のIDに合致した記事を返す
 func GetAdminArticle(id int) RequestArticleData {
 	// 関連するアーティストを取得
@@ -347,8 +368,9 @@ func GetAdminArticle(id int) RequestArticleData {
 		}
 	} else {
 		// ローカル
+		localFilePath := "./static/" + IDStr + "/thumb.jpeg"
 		filePath := "http://localhost:5000/static/" + IDStr + "/thumb.jpeg"
-		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		if _, err := os.Stat(localFilePath); !os.IsNotExist(err) {
 			src = filePath
 		}
 	}
@@ -361,17 +383,24 @@ func GetAdminArticle(id int) RequestArticleData {
 	pictures = append(pictures, picture)
 
 	// レスポンス用データを形成
-	var artistData []int
+	var artistInfoIDs []int
+	var artistIDs []string
+	
 	for _, artistInfo := range artistInfos {
-		artistData = append(artistData, int(artistInfo.ID))
+		artistIDs = append(artistIDs, artistInfo.ArtistId)
 	}
+	DbConnection.Where("artist_id IN ?", artistIDs).Find(&artistInfos)
+	for _, artistInfo := range artistInfos {
+		artistInfoIDs = append(artistInfoIDs, int(artistInfo.ID))
+	}
+
 	requestArticleData := RequestArticleData{
 		ID:        article.ID,
 		Pictures:  pictures,
 		Title:     article.Title,
 		Text:      article.Text,
 		Category:  article.Category,
-		ArtistIds: artistData,
+		ArtistIds: artistInfoIDs,
 	}
 
 	return requestArticleData
