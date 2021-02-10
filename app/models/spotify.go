@@ -70,16 +70,17 @@ func GetMovies(query string, searchType string, maxResults int64) []string {
 		fmt.Sprintf("Error creating new YouTube client: %v", err)
 	}
 
+	var videos []string
 	call := service.Search.List([]string{"id", "snippet"}).
 		Q(query + " MV").
 		Type(searchType).
 		MaxResults(maxResults)
 	response, err := call.Do()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("youtube call error:%v\n", err)
+		return videos
 	}
 
-	var videos []string
 	for _, item := range response.Items {
 		switch item.Id.Kind {
 		case "youtube#video":
