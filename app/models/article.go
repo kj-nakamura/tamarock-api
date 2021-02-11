@@ -12,7 +12,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -303,18 +302,7 @@ func GetArticle(id int) ResponseArticleData {
 	// アーティスト情報取得
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
 
-	src := ""
-	IDStr := strconv.FormatInt(int64(article.ID), 10)
-	if config.Env.Env == "prod" {
-		if checkS3KeyExists(IDStr) {
-			src = imageURL + IDStr + ".jpeg"
-		}
-	} else {
-		filePath := "../../static/" + IDStr + "/thumb.jpeg"
-		if _, err := os.Stat(filePath); !os.IsNotExist(err) {
-			src = filePath
-		}
-	}
+	src := getThumbnail("", int64(article.ID))
 
 	picture := Picture{
 		Src:   src,
@@ -335,32 +323,8 @@ func GetArticle(id int) ResponseArticleData {
 	return responseArticleData
 }
 
-func fileExists(filename string) bool {
-    _, err := os.Stat(filename)
-
-    if pathError, ok := err.(*os.PathError); ok {
-        if pathError.Err == syscall.ENOTDIR {
-            return false
-        }
-    }
-
-    if os.IsNotExist(err) {
-        return false
-    }
-
-    return true
-}
-
-// GetAdminArticle is 引数のIDに合致した記事を返す
-func GetAdminArticle(id int) RequestArticleData {
-	// 関連するアーティストを取得
-	var article Article
-	var artistInfos []ArtistInfo
-	DbConnection.First(&article, id)
-	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
-
-	src := defaultPicture
-	IDStr := strconv.FormatInt(int64(article.ID), 10)
+func getThumbnail(src string, articleID int64) string {
+	IDStr := strconv.FormatInt(articleID, 10)
 	if config.Env.Env == "prod" {
 		// 本番
 		if checkS3KeyExists(IDStr) {
@@ -375,6 +339,19 @@ func GetAdminArticle(id int) RequestArticleData {
 		}
 	}
 
+	return src
+}
+
+// GetAdminArticle is 引数のIDに合致した記事を返す
+func GetAdminArticle(id int) RequestArticleData {
+	// 関連するアーティストを取得
+	var article Article
+	var artistInfos []ArtistInfo
+	DbConnection.First(&article, id)
+	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
+
+	src := getThumbnail(defaultPicture, int64(article.ID))
+
 	picture := Picture{
 		Src:   src,
 		Title: "thumbnail",
@@ -385,7 +362,7 @@ func GetAdminArticle(id int) RequestArticleData {
 	// レスポンス用データを形成
 	var artistInfoIDs []int
 	var artistIDs []string
-	
+
 	for _, artistInfo := range artistInfos {
 		artistIDs = append(artistIDs, artistInfo.ArtistId)
 	}
