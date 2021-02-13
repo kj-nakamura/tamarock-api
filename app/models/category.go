@@ -54,7 +54,6 @@ func CreateCategory(r *http.Request) Category {
 	}
 
 	// カテゴリを保存
-	fmt.Println(time.Now())
 	categoryData := map[string]interface{}{
 		"Name":      category.Name,
 		"CreatedAt": time.Now(),
