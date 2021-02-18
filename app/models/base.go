@@ -22,7 +22,8 @@ func init() {
 	}
 
 	// migrateAdminUser()
-	// migrateArtistInfo()
+	migrateArtistInfo()
 	// migrateArticle()
 	// migrateCategory()
+	migrateYoutube()
 }

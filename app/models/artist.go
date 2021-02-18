@@ -14,15 +14,16 @@ import (
 
 // ArtistInfo is table
 type ArtistInfo struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	ArtistId  string         `gorm:"not null" json:"artist_id"`
-	Name      string         `gorm:"not null" json:"name"`
-	Url       string         `json:"url"`
-	TwitterId string         `json:"twitter_id"`
-	Articles  []Article      `gorm:"many2many:article_artist_infos;" json:"articles"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at"`
+	ID         uint           `gorm:"primaryKey" json:"id"`
+	ArtistId   string         `gorm:"not null" json:"artist_id"`
+	Name       string         `gorm:"not null" json:"name"`
+	Url        string         `json:"url"`
+	TwitterId  string         `json:"twitter_id"`
+	Articles   []Article      `gorm:"many2many:article_artist_infos;" json:"articles"`
+	YoutubeIds []Youtube      `gorm:"many2many:artist_info_youtubes;" json:"youtube_ids"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `json:"deleted_at"`
 }
 
 func migrateArtistInfo() {
