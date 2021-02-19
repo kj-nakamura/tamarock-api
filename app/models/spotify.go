@@ -17,14 +17,12 @@ import (
 // SpotifyArtistInfo is an artist infomation
 type SpotifyArtistInfo struct {
 	SpotidyArtistInfo *spotify.FullArtist `json:"spotify_artist_info"`
-	YoutubeIds        []string            `json:"youtube_ids"`
 }
 
 // NewSpotifyArtist is 引数に準じたartist情報を返す
-func NewSpotifyArtist(spotifyArtistInfo *spotify.FullArtist, youtubeIds []string) *SpotifyArtistInfo {
+func NewSpotifyArtist(spotifyArtistInfo *spotify.FullArtist) *SpotifyArtistInfo {
 	return &SpotifyArtistInfo{
 		spotifyArtistInfo,
-		youtubeIds,
 	}
 }
 
@@ -54,9 +52,7 @@ func GetSpotifyArtist(artistID string) *SpotifyArtistInfo {
 		return nil
 	}
 
-	videos := GetMovies(result.Name, "video", 6)
-
-	return NewSpotifyArtist(result, videos)
+	return NewSpotifyArtist(result)
 }
 
 // GetMovies is 引数のIDに合致したアーティストを返す

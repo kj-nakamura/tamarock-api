@@ -109,6 +109,7 @@ func GetArtistInfo(ID int) ArtistInfo {
 func GetArtistInfoFromArtistID(artistID string, start int, end int, order string, sort string, query string) ArtistInfo {
 	var artistInfo ArtistInfo
 	var articles []Article
+	var youtubes []Youtube
 
 	DbConnection.Where("artist_id = ?", artistID).First(&artistInfo)
 	// 記事情報取得
@@ -126,6 +127,7 @@ func GetArtistInfoFromArtistID(artistID string, start int, end int, order string
 	} else {
 		DbConnection.Model(&artistInfo).Association("Articles").Find(&articles)
 	}
+	DbConnection.Where("artist_id = ?", artistInfo.ID).Find(&youtubes)
 
 	responseArtistInfo := ArtistInfo{
 		ID:        artistInfo.ID,
@@ -134,6 +136,7 @@ func GetArtistInfoFromArtistID(artistID string, start int, end int, order string
 		Url:       artistInfo.Url,
 		TwitterId: artistInfo.TwitterId,
 		Articles:  articles,
+		Youtubes:  youtubes,
 	}
 
 	return responseArtistInfo
