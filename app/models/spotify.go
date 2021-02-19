@@ -70,7 +70,7 @@ func GetMovies(query string, searchType string, maxResults int64) []string {
 		fmt.Sprintf("Error creating new YouTube client: %v", err)
 	}
 
-	var videos []string
+	var movies []string
 	call := service.Search.List([]string{"id", "snippet"}).
 		Q(query + " MV").
 		Type(searchType).
@@ -78,15 +78,15 @@ func GetMovies(query string, searchType string, maxResults int64) []string {
 	response, err := call.Do()
 	if err != nil {
 		fmt.Printf("youtube call error:%v\n", err)
-		return videos
+		return movies
 	}
 
 	for _, item := range response.Items {
 		switch item.Id.Kind {
 		case "youtube#video":
-			videos = append(videos, item.Id.VideoId)
+			movies = append(movies, item.Id.VideoId)
 		}
 	}
 
-	return videos
+	return movies
 }

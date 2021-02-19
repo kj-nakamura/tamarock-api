@@ -14,16 +14,16 @@ import (
 
 // ArtistInfo is table
 type ArtistInfo struct {
-	ID         uint           `gorm:"primaryKey" json:"id"`
-	ArtistId   string         `gorm:"not null" json:"artist_id"`
-	Name       string         `gorm:"not null" json:"name"`
-	Url        string         `json:"url"`
-	TwitterId  string         `json:"twitter_id"`
-	Articles   []Article      `gorm:"many2many:article_artist_infos;" json:"articles"`
-	YoutubeIds []Youtube      `gorm:"many2many:artist_info_youtubes;" json:"youtube_ids"`
-	CreatedAt  time.Time      `json:"created_at"`
-	UpdatedAt  time.Time      `json:"updated_at"`
-	DeletedAt  gorm.DeletedAt `json:"deleted_at"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	ArtistId  string         `gorm:"not null" json:"artist_id"`
+	Name      string         `gorm:"not null" json:"name"`
+	Url       string         `json:"url"`
+	TwitterId string         `json:"twitter_id"`
+	Articles  []Article      `gorm:"many2many:article_artist_infos;" json:"articles"`
+	Youtubes  []Youtube      `gorm:"foreignKey:ArtistID" json:"youtubes"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at"`
 }
 
 func migrateArtistInfo() {
@@ -43,6 +43,15 @@ func CreateArtistInfo(r *http.Request) ArtistInfo {
 	if result.Error != nil {
 		fmt.Println(result.Error)
 	}
+
+	// アーティストに紐づく動画を保存して取得
+	var youtubes []Youtube
+	movies := GetMovies(artistInfo.Name, "video", 6)
+
+	for _, movie := range movies {
+		youtubes = append(youtubes, createYoutube(movie, int(artistInfo.ID)))
+	}
+	artistInfo.Youtubes = youtubes
 
 	return artistInfo
 }
@@ -67,6 +76,16 @@ func UpdateArtistInfo(r *http.Request, id int) ArtistInfo {
 		fmt.Println(result.Error)
 	}
 
+	deleteYoutube(int(artistInfo.ID))
+	// アーティストに紐づく動画を保存して取得
+	var youtubes []Youtube
+	movies := GetMovies(artistInfo.Name, "video", 6)
+
+	for _, movie := range movies {
+		youtubes = append(youtubes, createYoutube(movie, int(artistInfo.ID)))
+	}
+	artistInfo.Youtubes = youtubes
+
 	return artistInfo
 }
 
@@ -74,6 +93,7 @@ func UpdateArtistInfo(r *http.Request, id int) ArtistInfo {
 func DeleteArtistInfo(id int) {
 	var artistInfo ArtistInfo
 
+	deleteYoutube(id)
 	DbConnection.Delete(&artistInfo, id)
 }
 
