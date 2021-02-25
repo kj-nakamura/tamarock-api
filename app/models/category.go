@@ -16,9 +16,9 @@ type Category struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
 	Name      string         `gorm:"not null" json:"name"`
 	Articles  []Article      `gorm:"foreignKey:Category" json:"articles"`
-	CreatedAt time.Time      `json:"created_at" json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at" json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at" json:"deleted_at"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at"`
 }
 
 // RequestCategoryData is request data
@@ -26,18 +26,18 @@ type RequestCategoryData struct {
 	ID         uint           `gorm:"primaryKey" json:"id"`
 	Name       string         `gorm:"not null" json:"name"`
 	ArticleIds []int          `json:"article_ids"`
-	CreatedAt  time.Time      `json:"created_at" json:"created_at"`
-	UpdatedAt  time.Time      `json:"updated_at" json:"updated_at"`
-	DeletedAt  gorm.DeletedAt `json:"deleted_at" json:"deleted_at"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `json:"deleted_at"`
 }
 
 // UpdateCategoryData is request data
 type UpdateCategoryData struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
 	Name      string         `gorm:"not null" json:"name"`
-	CreatedAt time.Time      `json:"created_at" json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at" json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at" json:"deleted_at"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at"`
 }
 
 func migrateCategory() {

@@ -27,40 +27,43 @@ import (
 
 // Article is table
 type Article struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	Title     string         `json:"title"`
-	Text      string         `gorm:"text" json:"text"`
-	Category  int            `json:"category"`
-	Artists   []ArtistInfo   `gorm:"many2many:article_artist_infos;" json:"artists"`
-	CreatedAt time.Time      `json:"createdat"`
-	UpdatedAt time.Time      `json:"updatedat"`
-	DeletedAt gorm.DeletedAt `json:"deletedat"`
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	Title       string         `json:"title"`
+	Text        string         `gorm:"text" json:"text"`
+	Category    int            `json:"category"`
+	Artists     []ArtistInfo   `gorm:"many2many:article_artist_infos;" json:"artists"`
+	PublishedAt time.Time      `json:"published_at"`
+	CreatedAt   time.Time      `json:"createdat"`
+	UpdatedAt   time.Time      `json:"updatedat"`
+	DeletedAt   gorm.DeletedAt `json:"deletedat"`
 }
 
 // ResponseArticleData is frontに返す形
 type ResponseArticleData struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	Title     string         `json:"title"`
-	Pictures  []Picture      `json:"pictures"`
-	Text      string         `gorm:"text" json:"text"`
-	Category  int            `json:"category"`
-	Artists   []ArtistInfo   `gorm:"many2many:article_artist_infos;" json:"artists"`
-	CreatedAt time.Time      `json:"createdat"`
-	UpdatedAt time.Time      `json:"updatedat"`
-	DeletedAt gorm.DeletedAt `json:"deletedat"`
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	Title       string         `json:"title"`
+	Pictures    []Picture      `json:"pictures"`
+	Text        string         `gorm:"text" json:"text"`
+	Category    int            `json:"category"`
+	Artists     []ArtistInfo   `gorm:"many2many:article_artist_infos;" json:"artists"`
+	PublishedAt time.Time      `json:"published_at"`
+	CreatedAt   time.Time      `json:"createdat"`
+	UpdatedAt   time.Time      `json:"updatedat"`
+	DeletedAt   gorm.DeletedAt `json:"deletedat"`
 }
 
 // RequestArticleData is フロントから受け取る形
 type RequestArticleData struct {
-	ID        uint           `gorm:"primaryKey" json:"id"`
-	Title     string         `json:"title"`
-	Pictures  []Picture      `json:"pictures"`
-	Text      string         `gorm:"text" json:"text"`
-	Category  int            `json:"category"`
-	ArtistIds []int          `json:"artist_ids"`
-	CreatedAt time.Time      `json:"createdat"`
-	UpdatedAt time.Time      `json:"updatedat"`
-	DeletedAt gorm.DeletedAt `json:"deletedat"`
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	Title       string         `json:"title"`
+	Pictures    []Picture      `json:"pictures"`
+	Text        string         `gorm:"text" json:"text"`
+	Category    int            `json:"category"`
+	ArtistIds   []int          `json:"artist_ids"`
+	PublishedAt string         `json:"published_at"`
+	CreatedAt   time.Time      `json:"createdat"`
+	UpdatedAt   time.Time      `json:"updatedat"`
+	DeletedAt   gorm.DeletedAt `json:"deletedat"`
 }
 
 // Picture is 画像の受け取りと送信
@@ -150,12 +153,20 @@ func UpdateArticle(r *http.Request, id int) RequestArticleData {
 	}
 
 	// 記事を保存
+	t, err := time.Parse("2006-01-02", requestArticleData.PublishedAt)
+	// 朝9時に配信するため
+	addedTime := t.Add(9 * time.Hour)
+
+	if err != nil {
+		log.Fatalf("time parse error: %v", err)
+	}
 	articleData := Article{
-		ID:       requestArticleData.ID,
-		Title:    requestArticleData.Title,
-		Text:     requestArticleData.Text,
-		Category: requestArticleData.Category,
-		Artists:  artistInfos,
+		ID:          requestArticleData.ID,
+		Title:       requestArticleData.Title,
+		Text:        requestArticleData.Text,
+		Category:    requestArticleData.Category,
+		PublishedAt: addedTime,
+		Artists:     artistInfos,
 	}
 
 	result := DbConnection.Updates(articleData)
@@ -297,7 +308,9 @@ func GetArticle(id int) ResponseArticleData {
 	// 記事を取得
 	var article Article
 	var artistInfos []ArtistInfo
-	DbConnection.First(&article, id)
+
+	// 今日以前に投稿されている記事を返す
+	DbConnection.Where("published_at < ?", time.Now()).Or("published_at IS NULL").First(&article, id)
 
 	// アーティスト情報取得
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
@@ -312,12 +325,13 @@ func GetArticle(id int) ResponseArticleData {
 	pictures = append(pictures, picture)
 
 	responseArticleData := ResponseArticleData{
-		ID:       article.ID,
-		Pictures: pictures,
-		Title:    article.Title,
-		Text:     article.Text,
-		Category: article.Category,
-		Artists:  artistInfos,
+		ID:          article.ID,
+		Pictures:    pictures,
+		Title:       article.Title,
+		Text:        article.Text,
+		Category:    article.Category,
+		Artists:     artistInfos,
+		PublishedAt: article.PublishedAt,
 	}
 
 	return responseArticleData
@@ -371,13 +385,15 @@ func GetAdminArticle(id int) RequestArticleData {
 		artistInfoIDs = append(artistInfoIDs, int(artistInfo.ID))
 	}
 
+	t := article.PublishedAt.Format("2006-01-02")
 	requestArticleData := RequestArticleData{
-		ID:        article.ID,
-		Pictures:  pictures,
-		Title:     article.Title,
-		Text:      article.Text,
-		Category:  article.Category,
-		ArtistIds: artistInfoIDs,
+		ID:          article.ID,
+		Pictures:    pictures,
+		Title:       article.Title,
+		Text:        article.Text,
+		Category:    article.Category,
+		ArtistIds:   artistInfoIDs,
+		PublishedAt: t,
 	}
 
 	return requestArticleData
@@ -398,9 +414,9 @@ func GetArticles(start int, end int, order string, sort string, query string, co
 		}
 		limit := end - start
 		if column == "" {
-			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("title LIKE?", "%"+query+"%").Find(&articles)
+			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("published_at < ?", time.Now()).Or("published_at IS NULL").Where("title LIKE?", "%"+query+"%").Find(&articles)
 		} else {
-			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where(column+" = ?", query).Find(&articles)
+			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("published_at < ?", time.Now()).Or("published_at IS NULL").Where(column+" = ?", query).Find(&articles)
 		}
 	} else {
 		DbConnection.Find(&articles)
