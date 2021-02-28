@@ -97,12 +97,19 @@ func CreateArticle(r *http.Request) Article {
 	}
 
 	// 記事を保存
+	t, err := time.Parse("2006-01-02", requestArticleData.PublishedAt)
+	if err != nil {
+		log.Fatalf("time parse error: %v", err)
+	}
+
+	// 記事を保存
 	article := Article{
-		ID:       requestArticleData.ID,
-		Title:    requestArticleData.Title,
-		Text:     requestArticleData.Text,
-		Category: requestArticleData.Category,
-		Artists:  artistInfos,
+		ID:          requestArticleData.ID,
+		Title:       requestArticleData.Title,
+		Text:        requestArticleData.Text,
+		Category:    requestArticleData.Category,
+		Artists:     artistInfos,
+		PublishedAt: t,
 	}
 	result := DbConnection.Create(&article)
 	if result.Error != nil {
@@ -154,8 +161,6 @@ func UpdateArticle(r *http.Request, id int) RequestArticleData {
 
 	// 記事を保存
 	t, err := time.Parse("2006-01-02", requestArticleData.PublishedAt)
-	// 朝9時に配信するため
-	addedTime := t.Add(9 * time.Hour)
 
 	if err != nil {
 		log.Fatalf("time parse error: %v", err)
@@ -165,7 +170,7 @@ func UpdateArticle(r *http.Request, id int) RequestArticleData {
 		Title:       requestArticleData.Title,
 		Text:        requestArticleData.Text,
 		Category:    requestArticleData.Category,
-		PublishedAt: addedTime,
+		PublishedAt: t,
 		Artists:     artistInfos,
 	}
 
@@ -310,7 +315,7 @@ func GetArticle(id int) ResponseArticleData {
 	var artistInfos []ArtistInfo
 
 	// 今日以前に投稿されている記事を返す
-	DbConnection.Where("published_at < ?", time.Now()).Or("published_at IS NULL").First(&article, id)
+	DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).First(&article, id)
 
 	// アーティスト情報取得
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
@@ -361,7 +366,8 @@ func GetAdminArticle(id int) RequestArticleData {
 	// 関連するアーティストを取得
 	var article Article
 	var artistInfos []ArtistInfo
-	DbConnection.First(&article, id)
+
+	DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).First(&article, id)
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
 
 	src := getThumbnail(defaultPicture, int64(article.ID))
