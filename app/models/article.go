@@ -420,9 +420,9 @@ func GetArticles(start int, end int, order string, sort string, query string, co
 		}
 		limit := end - start
 		if column == "" {
-			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("published_at < ?", time.Now()).Or("published_at IS NULL").Where("title LIKE?", "%"+query+"%").Find(&articles)
+			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("title LIKE?", "%"+query+"%").Find(&articles)
 		} else {
-			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("published_at < ?", time.Now()).Or("published_at IS NULL").Where(column+" = ?", query).Find(&articles)
+			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where(column+" = ?", query).Find(&articles)
 		}
 	} else {
 		DbConnection.Find(&articles)
