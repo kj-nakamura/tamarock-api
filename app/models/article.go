@@ -405,8 +405,7 @@ func GetAdminArticle(id int) RequestArticleData {
 	return requestArticleData
 }
 
-// GetArticles is 記事を複数返す
-func GetArticles(start int, end int, order string, sort string, query string, column string) []Article {
+func GetAdminArticles(start int, end int, order string, sort string, query string, column string) []Article {
 	var articles []Article
 
 	if end > 0 {
@@ -426,6 +425,32 @@ func GetArticles(start int, end int, order string, sort string, query string, co
 		}
 	} else {
 		DbConnection.Find(&articles)
+	}
+
+	return articles
+}
+
+// GetArticles is 記事を複数返す
+func GetArticles(start int, end int, order string, sort string, query string, column string) []Article {
+	var articles []Article
+
+	if end > 0 {
+		sortColumn := sort
+		if sort == "" {
+			sortColumn = "id"
+		}
+		createdOrder := sortColumn + " asc"
+		if order == "DESC" {
+			createdOrder = sortColumn + " desc"
+		}
+		limit := end - start
+		if column == "" {
+			DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).Order(createdOrder).Offset(start).Limit(limit).Where("title LIKE?", "%"+query+"%").Find(&articles)
+		} else {
+			DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).Order(createdOrder).Offset(start).Limit(limit).Where(column+" = ?", query).Find(&articles)
+		}
+	} else {
+		DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).Find(&articles)
 	}
 
 	return articles

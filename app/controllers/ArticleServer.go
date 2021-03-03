@@ -47,7 +47,7 @@ func getAdminArticlesHandler(w http.ResponseWriter, r *http.Request) {
 	sort := r.URL.Query().Get("_sort")
 	query := r.URL.Query().Get("q")
 	column := r.URL.Query().Get("column")
-	articles := models.GetArticles(start, end, order, sort, query, column)
+	articles := models.GetAdminArticles(start, end, order, sort, query, column)
 	articleCount := models.CountArticle(query)
 
 	w.Header().Set("X-Total-Count", strconv.Itoa(articleCount))
