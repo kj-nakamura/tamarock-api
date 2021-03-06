@@ -33,9 +33,9 @@ type Article struct {
 	Category    int            `json:"category"`
 	Artists     []ArtistInfo   `gorm:"many2many:article_artist_infos;" json:"artists"`
 	PublishedAt time.Time      `json:"published_at"`
-	CreatedAt   time.Time      `json:"createdat"`
-	UpdatedAt   time.Time      `json:"updatedat"`
-	DeletedAt   gorm.DeletedAt `json:"deletedat"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"deleted_at"`
 }
 
 // ResponseArticleData is frontに返す形
@@ -47,9 +47,9 @@ type ResponseArticleData struct {
 	Category    int            `json:"category"`
 	Artists     []ArtistInfo   `gorm:"many2many:article_artist_infos;" json:"artists"`
 	PublishedAt time.Time      `json:"published_at"`
-	CreatedAt   time.Time      `json:"createdat"`
-	UpdatedAt   time.Time      `json:"updatedat"`
-	DeletedAt   gorm.DeletedAt `json:"deletedat"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"deleted_at"`
 }
 
 // RequestArticleData is フロントから受け取る形
@@ -61,9 +61,9 @@ type RequestArticleData struct {
 	Category    int            `json:"category"`
 	ArtistIds   []int          `json:"artist_ids"`
 	PublishedAt string         `json:"published_at"`
-	CreatedAt   time.Time      `json:"createdat"`
-	UpdatedAt   time.Time      `json:"updatedat"`
-	DeletedAt   gorm.DeletedAt `json:"deletedat"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"deleted_at"`
 }
 
 // Picture is 画像の受け取りと送信
