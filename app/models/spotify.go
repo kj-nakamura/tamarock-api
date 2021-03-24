@@ -4,7 +4,6 @@ import (
 	"api/config"
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/zmb3/spotify"
@@ -35,7 +34,7 @@ func GetClient() spotify.Client {
 	}
 	token, err := config.Token(context.Background())
 	if err != nil {
-		log.Fatalf("couldn't get token: %v", err)
+		fmt.Sprintf("couldn't get token: %v", err)
 	}
 
 	client := spotify.Authenticator{}.NewClient(token)
@@ -49,7 +48,7 @@ func GetSpotifyArtist(artistID string) *SpotifyArtistInfo {
 	result, err := client.GetArtist(spotify.ID(artistID)) // artistID
 	if err != nil {
 		fmt.Sprintf("couldn't get artists: %v", err)
-		return nil
+		return NewSpotifyArtist(nil)
 	}
 
 	return NewSpotifyArtist(result)

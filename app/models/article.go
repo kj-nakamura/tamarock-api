@@ -320,18 +320,9 @@ func GetArticle(id int) ResponseArticleData {
 	// アーティスト情報取得
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
 
-	src := getThumbnail("", int64(article.ID))
-
-	picture := Picture{
-		Src:   src,
-		Title: "thumbnail",
-	}
-	var pictures []Picture
-	pictures = append(pictures, picture)
-
 	responseArticleData := ResponseArticleData{
 		ID:          article.ID,
-		Pictures:    pictures,
+		Pictures:    addPicture(int64(article.ID), ""),
 		Title:       article.Title,
 		Text:        article.Text,
 		Category:    article.Category,
@@ -342,25 +333,6 @@ func GetArticle(id int) ResponseArticleData {
 	return responseArticleData
 }
 
-func getThumbnail(src string, articleID int64) string {
-	IDStr := strconv.FormatInt(articleID, 10)
-	if config.Env.Env == "prod" {
-		// 本番
-		if checkS3KeyExists(IDStr) {
-			src = imageURL + IDStr + ".jpeg"
-		}
-	} else {
-		// ローカル
-		localFilePath := "./static/" + IDStr + "/thumb.jpeg"
-		filePath := "http://localhost:5000/static/" + IDStr + "/thumb.jpeg"
-		if _, err := os.Stat(localFilePath); !os.IsNotExist(err) {
-			src = filePath
-		}
-	}
-
-	return src
-}
-
 // GetAdminArticle is 引数のIDに合致した記事を返す
 func GetAdminArticle(id int) RequestArticleData {
 	// 関連するアーティストを取得
@@ -369,15 +341,6 @@ func GetAdminArticle(id int) RequestArticleData {
 
 	DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).First(&article, id)
 	DbConnection.Model(&article).Association("Artists").Find(&artistInfos)
-
-	src := getThumbnail(defaultPicture, int64(article.ID))
-
-	picture := Picture{
-		Src:   src,
-		Title: "thumbnail",
-	}
-	var pictures []Picture
-	pictures = append(pictures, picture)
 
 	// レスポンス用データを形成
 	var artistInfoIDs []int
@@ -391,15 +354,14 @@ func GetAdminArticle(id int) RequestArticleData {
 		artistInfoIDs = append(artistInfoIDs, int(artistInfo.ID))
 	}
 
-	t := article.PublishedAt.Format("2006-01-02")
 	requestArticleData := RequestArticleData{
 		ID:          article.ID,
-		Pictures:    pictures,
+		Pictures:    addPicture(int64(article.ID), defaultPicture),
 		Title:       article.Title,
 		Text:        article.Text,
 		Category:    article.Category,
 		ArtistIds:   artistInfoIDs,
-		PublishedAt: t,
+		PublishedAt: article.PublishedAt.Format("2006-01-02"),
 	}
 
 	return requestArticleData
@@ -431,7 +393,7 @@ func GetAdminArticles(start int, end int, order string, sort string, query strin
 }
 
 // GetArticles is 記事を複数返す
-func GetArticles(start int, end int, order string, sort string, query string, column string) []Article {
+func GetArticles(start int, end int, order string, sort string, query string, column string) []ResponseArticleData {
 	var articles []Article
 
 	if end > 0 {
@@ -453,7 +415,21 @@ func GetArticles(start int, end int, order string, sort string, query string, co
 		DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).Find(&articles)
 	}
 
-	return articles
+	var responseArticleDatas []ResponseArticleData
+	for _, article := range articles {
+		responseArticleData := ResponseArticleData{
+			ID:          article.ID,
+			Pictures:    addPicture(int64(article.ID), ""),
+			Title:       article.Title,
+			Text:        article.Text,
+			Category:    article.Category,
+			PublishedAt: article.PublishedAt,
+		}
+
+		responseArticleDatas = append(responseArticleDatas, responseArticleData)
+	}
+
+	return responseArticleDatas
 }
 
 // CountArticle is 全記事数を取得
@@ -462,4 +438,36 @@ func CountArticle(query string) int {
 	DbConnection.Where("title LIKE?", "%"+query+"%").Find(&articles)
 
 	return len(articles)
+}
+
+// private function
+
+func getThumbnail(src string, articleID int64) string {
+	IDStr := strconv.FormatInt(articleID, 10)
+	if config.Env.Env == "prod" {
+		// 本番
+		if checkS3KeyExists(IDStr) {
+			src = imageURL + IDStr + ".jpeg"
+		}
+	} else {
+		// ローカル
+		localFilePath := "./static/" + IDStr + "/thumb.jpeg"
+		filePath := "http://localhost:5000/static/" + IDStr + "/thumb.jpeg"
+		if _, err := os.Stat(localFilePath); !os.IsNotExist(err) {
+			src = filePath
+		}
+	}
+
+	return src
+}
+
+func addPicture(articleID int64, defaultPicture string) []Picture {
+	src := getThumbnail(defaultPicture, articleID)
+
+	picture := Picture{
+		Src:   src,
+		Title: "thumbnail",
+	}
+	var pictures []Picture
+	return append(pictures, picture)
 }
