@@ -1,8 +1,6 @@
 package models
 
 import (
-	"api/config"
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -14,13 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
@@ -117,16 +108,9 @@ func CreateArticle(r *http.Request) Article {
 	}
 
 	if requestArticleData.Pictures != nil && requestArticleData.Pictures[0].Src != "" {
-		if config.Env.Env == "prod" {
-			err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
-			if err != nil {
-				log.Println(err)
-			}
-		} else {
-			err := uploadImageToLocal(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
-			if err != nil {
-				log.Printf("local upload error: %v", err)
-			}
+		err := uploadImageToLocal(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
+		if err != nil {
+			log.Printf("local upload error: %v", err)
 		}
 	}
 
@@ -182,21 +166,10 @@ func UpdateArticle(r *http.Request, id int) RequestArticleData {
 	// 写真アップロード 画像なし、デフォルト画像、S3URLの場合はアップロードしない。(base64のみ)
 	// フォームに画像がある&デフォルトの画像ではない
 	if requestArticleData.Pictures != nil && requestArticleData.Pictures[0].Src != defaultPicture {
-		// 本番
-		if config.Env.Env == "prod" {
-			// フォームデータに現在の画像URLがないこと(アップロードしたbase64であること)
-			if strings.Contains(requestArticleData.Pictures[0].Src, imageURL) == false {
-				err := UploadToS3(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
-				if err != nil {
-					log.Printf("s3 upload error: %v", err)
-				}
-			}
-		} else {
-			// ローカル
-			err := uploadImageToLocal(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
-			if err != nil {
-				log.Printf("local upload error: %v", err)
-			}
+		// ローカル
+		err := uploadImageToLocal(requestArticleData.Pictures[0].Src, "jpeg", strconv.FormatInt(int64(article.ID), 10))
+		if err != nil {
+			log.Printf("local upload error: %v", err)
 		}
 	}
 
@@ -233,67 +206,6 @@ func uploadImageToLocal(imageBase64 string, fileExtension string, fileDir string
 	file.Close()
 
 	return nil
-}
-
-// UploadToS3 is s3に画像アップロード
-func UploadToS3(imageBase64 string, fileExtension string, filename string) error {
-	// 環境変数からS3Credential周りの設定を取得
-	bucketName := config.Env.BucketName
-	sess := session.Must(session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials(config.Env.S3AK, config.Env.S3SK, ""),
-		Region:      aws.String("ap-northeast-1"),
-	}))
-
-	uploader := s3manager.NewUploader(sess)
-
-	b64data := imageBase64[strings.IndexByte(imageBase64, ',')+1:]
-	data, err := base64.StdEncoding.DecodeString(b64data)
-	if err != nil {
-		log.Fatalf("upload decode error: %v", err)
-	}
-	wb := new(bytes.Buffer)
-	wb.Write(data)
-
-	res, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket:      aws.String(bucketName),
-		Key:         aws.String("thumb/" + filename + "." + fileExtension),
-		Body:        wb,
-		ContentType: aws.String("image/" + fileExtension),
-	})
-
-	if err != nil {
-		fmt.Sprintf("upload error: %v", res)
-		if err, ok := err.(awserr.Error); ok && err.Code() == request.CanceledErrorCode {
-			log.Fatalf("upload answer error: %v", err)
-		} else {
-			return fmt.Errorf("Upload Failed %d", 400)
-		}
-	}
-
-	return nil
-}
-
-// checkS3KeyExists is 画像がS3に存在するかチェックする
-func checkS3KeyExists(objectKey string) bool {
-	sess := session.Must(session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials(config.Env.S3AK, config.Env.S3SK, ""),
-		Region:      aws.String("ap-northeast-1"),
-	}))
-
-	bucketName := config.Env.BucketName
-
-	// S3 clientを作成
-	svc := s3.New(sess)
-	input := &s3.HeadObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String("thumb/" + objectKey + ".jpeg"),
-	}
-
-	_, err := svc.HeadObject(input)
-	if err != nil {
-		return false
-	}
-	return true
 }
 
 // DeleteArticle is 記事を1つ削除
@@ -444,18 +356,11 @@ func CountArticle(query string) int {
 
 func getThumbnail(src string, articleID int64) string {
 	IDStr := strconv.FormatInt(articleID, 10)
-	if config.Env.Env == "prod" {
-		// 本番
-		if checkS3KeyExists(IDStr) {
-			src = imageURL + IDStr + ".jpeg"
-		}
-	} else {
-		// ローカル
-		localFilePath := "./static/" + IDStr + "/thumb.jpeg"
-		filePath := "http://localhost:5000/static/" + IDStr + "/thumb.jpeg"
-		if _, err := os.Stat(localFilePath); !os.IsNotExist(err) {
-			src = filePath
-		}
+	// ローカル
+	localFilePath := "./static/" + IDStr + "/thumb.jpeg"
+	filePath := "http://localhost:5000/static/" + IDStr + "/thumb.jpeg"
+	if _, err := os.Stat(localFilePath); !os.IsNotExist(err) {
+		src = filePath
 	}
 
 	return src

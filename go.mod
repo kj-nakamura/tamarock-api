@@ -3,7 +3,6 @@ module api
 go 1.14
 
 require (
-	github.com/aws/aws-sdk-go v1.34.31
 	github.com/bxcodec/faker/v3 v3.5.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
