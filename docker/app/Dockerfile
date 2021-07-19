@@ -1,5 +1,5 @@
 # ベースとなるDockerイメージ指定
-FROM golang:1.14.4-alpine3.12 as build
+FROM golang:1.16.6-alpine3.14 as build
 
 RUN apk add --update --no-cache ca-certificates git make
 
