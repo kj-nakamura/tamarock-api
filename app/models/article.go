@@ -319,7 +319,11 @@ func GetArticles(start int, end int, order string, sort string, query string, co
 		}
 		limit := end - start
 		if column == "" {
-			DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).Order(createdOrder).Offset(start).Limit(limit).Where("title LIKE?", "%"+query+"%").Find(&articles)
+			if query != "" {
+				DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).Order(createdOrder).Offset(start).Limit(limit).Where("title LIKE?", "%"+query+"%").Find(&articles)
+			} else {
+				DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).Order(createdOrder).Offset(start).Limit(limit).Find(&articles)
+			}
 		} else {
 			DbConnection.Where("published_at < ? OR published_at IS NULL", time.Now()).Order(createdOrder).Offset(start).Limit(limit).Where(column+" = ?", query).Find(&articles)
 		}

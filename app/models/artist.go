@@ -123,7 +123,11 @@ func GetArtistInfoFromArtistID(artistID string, start int, end int, order string
 			createdOrder = sortColumn + " desc"
 		}
 		limit := end - start
-		DbConnection.Model(&artistInfo).Where("title LIKE?", "%"+query+"%").Order(createdOrder).Offset(start).Limit(limit).Association("Articles").Find(&articles)
+		if query != "" {
+			DbConnection.Model(&artistInfo).Where("title LIKE?", "%"+query+"%").Order(createdOrder).Offset(start).Limit(limit).Association("Articles").Find(&articles)
+		} else {
+			DbConnection.Model(&artistInfo).Order(createdOrder).Offset(start).Limit(limit).Association("Articles").Find(&articles)
+		}
 	} else {
 		DbConnection.Model(&artistInfo).Association("Articles").Find(&articles)
 	}
@@ -156,7 +160,11 @@ func GetArtistInfos(start int, end int, order string, sort string, query string)
 			createdOrder = sortColumn + " desc"
 		}
 		limit := end - start
-		DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("name LIKE?", "%"+query+"%").Find(&artistInfos)
+		if query != "" {
+			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Where("name LIKE?", "%"+query+"%").Find(&artistInfos)
+		} else {
+			DbConnection.Order(createdOrder).Offset(start).Limit(limit).Find(&artistInfos)
+		}
 	} else {
 		DbConnection.Find(&artistInfos)
 	}

@@ -26,18 +26,6 @@ type ConfigValue struct {
 	Port      int
 }
 
-// SecretValue secret managerから取得
-type SecretValue struct {
-	YOUTUBE_API_KEY string
-	API_KEY         string
-	API_SECRET      string
-	DB_PASSWORD     string
-	DB_HOST         string
-	S3AK            string
-	S3SK            string
-	BUCKET_NAME     string
-}
-
 var Env EnvValue
 var Config ConfigValue
 
