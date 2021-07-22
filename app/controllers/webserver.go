@@ -8,11 +8,11 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"syscall"
 
 	"api/app/auth"
-	"api/config"
 
 	"github.com/gorilla/mux"
 	"golang.org/x/sys/unix"
@@ -140,7 +140,12 @@ func StartWebServer() error {
 		Control: listenCtrl, //portのbindを許可する設定を入れる
 	}
 
-	listener, err := lc.Listen(context.Background(), "tcp4", fmt.Sprintf(":%d", config.Config.Port))
+	port, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		panic(err)
+	}
+
+	listener, err := lc.Listen(context.Background(), "tcp4", fmt.Sprintf(":%d", port))
 	if err != nil {
 		panic(err)
 	}
