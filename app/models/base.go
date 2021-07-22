@@ -24,7 +24,7 @@ func init() {
 	// DbConnection, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	// postgres
-	if config.Env.Env == "prod" {
+	if os.Getenv("Env") == "prod" {
 		//prod
 		url := os.Getenv("DATABASE_URL")
 		connection, err := pq.ParseURL(url)
@@ -45,7 +45,7 @@ func init() {
 		}
 	} else {
 		// dev
-		dsn := "host=" + config.Env.DbHost + "user=" + config.Env.DbUserName + " password=" + config.Env.DbPassword + " dbname=" + config.Env.DbName + " port=5432 sslmode=disable TimeZone=Asia/Tokyo"
+		dsn := "host=" + config.Env.DbHost + " user=" + config.Env.DbUserName + " password=" + config.Env.DbPassword + " dbname=" + config.Env.DbName + " port=5432 sslmode=disable TimeZone=Asia/Tokyo"
 		DbConnection, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	}
 

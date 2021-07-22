@@ -7,7 +7,7 @@ import (
 )
 
 type EnvValue struct {
-	Env           string `required:"true" default:"dev"`
+	Env           string `default:"dev"`
 	YoutubeApiKey string `split_words:"true"`
 	ApiKey        string `split_words:"true"`
 	ApiSecret     string `split_words:"true"`
