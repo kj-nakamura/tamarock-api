@@ -9,7 +9,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.14.1
 	github.com/gorilla/mux v1.8.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/lib/pq v1.10.2 // indirect
+	github.com/lib/pq v1.10.2
 	github.com/zmb3/spotify v0.0.0-20200814173021-9bec46940cc0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
