@@ -45,7 +45,7 @@ func init() {
 		}
 	} else {
 		// dev
-		dsn := "host=postgres user=" + config.Env.DbUserName + " password=" + config.Env.DbPassword + " dbname=" + config.Env.DbName + " port=5432 sslmode=disable TimeZone=Asia/Tokyo"
+		dsn := "host=" + config.Env.DbHost + "user=" + config.Env.DbUserName + " password=" + config.Env.DbPassword + " dbname=" + config.Env.DbName + " port=5432 sslmode=disable TimeZone=Asia/Tokyo"
 		DbConnection, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	}
 

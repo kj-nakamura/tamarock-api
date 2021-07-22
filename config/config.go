@@ -11,13 +11,10 @@ type EnvValue struct {
 	YoutubeApiKey string `split_words:"true"`
 	ApiKey        string `split_words:"true"`
 	ApiSecret     string `split_words:"true"`
-	DbName        string `required:"true" split_words:"true"`
-	DbHost        string `split_words:"true" default:"mysql"`
-	DbUserName    string `required:"true" split_words:"true"`
-	DbPassword    string `split_words:"true"`
-	S3AK          string
-	S3SK          string
-	BucketName    string `split_words:"true"`
+	DbName        string `split_words:"true" default:"tamarock"`
+	DbHost        string `split_words:"true" default:"127.0.0.1"`
+	DbUserName    string `split_words:"true" default:"root"`
+	DbPassword    string `split_words:"true" default:"password"`
 }
 
 type ConfigValue struct {
